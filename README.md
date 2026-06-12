@@ -16,6 +16,9 @@ The agents self-improve from your experience — every bug, every awkward patter
 
 The tools are here. The shape of the framework is yours to decide.
 
+### Roadmap:
+🔨 0.1 - [First Game Tutorial](https://github.com/arthur0n/xenodot-forge/blob/main/docs/roadmap/first_game.md) 
+
 ## Why this exists
 
 Most AI-assisted game dev setups hand you a frontier model and a blank prompt. Describe your game, get some code, paste it in, pray it runs. That works — until you want to ship something repeatable, reviewable, and actually _yours_.
