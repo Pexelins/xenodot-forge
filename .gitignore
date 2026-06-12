@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+logs/
+
+# Your Godot project mounts here. Its files (including .claude/ agents and
+# skills, which live and evolve WITH the project) belong to its own repo —
+# the framework tracks only the folder.
+game/*
+!game/.gitkeep

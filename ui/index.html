@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Xenodot Forge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="agent-ui.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">X</span>
+      <span>Xenodot Forge</span>
+    </div>
+    <div class="project-chip">
+      <strong id="proj-name">—</strong>
+      <span class="path" id="proj-path"></span>
+    </div>
+    <div class="topbar-right">
+      <button class="approvals-pill" id="approvals-pill" style="display:none">
+        <span class="badge" id="pill-badge">0</span> waiting on you
+      </button>
+      <span class="usage" id="usage"></span>
+      <select class="mode-select" id="mode-select" aria-label="Tool approval mode">
+        <option value="ask">Ask each tool</option>
+        <option value="edits">Ask for edits only</option>
+        <option value="all">Auto-approve all</option>
+      </select>
+      <span class="session-status">
+        <span class="dot pulse" id="conn-dot"></span>
+        <span class="mono" id="model-name">connecting…</span>
+      </span>
+    </div>
+  </header>
+
+  <div class="app-body">
+
+    <aside class="sidebar">
+      <div class="side-section">
+        <div class="side-head">
+          <span class="side-label">Session</span>
+          <button class="icon-btn" id="new-session">+ new</button>
+        </div>
+        <div class="session-card active" id="session-card">
+          <span class="name"><span class="dot idle" id="session-dot"></span><span id="session-model">starting…</span></span>
+          <span class="meta" id="session-meta"></span>
+        </div>
+        <div id="recent-sessions"></div>
+      </div>
+
+      <div class="side-section">
+        <div class="side-head">
+          <span class="side-label">Project</span>
+          <button class="icon-btn" id="refresh">refresh</button>
+        </div>
+        <div id="project-tree"></div>
+      </div>
+    </aside>
+
+    <div class="panel-resizer" id="resize-sidebar" title="Drag to resize"></div>
+    <div class="panel-resizer" id="resize-activity" title="Drag to resize"></div>
+
+    <main class="main">
+      <div class="chat-scroll" id="chat-scroll">
+        <div class="chat-inner" id="chat-inner"></div>
+      </div>
+
+      <div class="composer-zone">
+        <div class="composer-inner">
+
+          <div class="agent-status" id="status-bar" style="display:none">
+            <span class="status-dot"></span>
+            <span><span class="agent-name" id="status-agent"></span> is running</span>
+            <span class="running-target" id="status-target"></span>
+            <span class="elapsed" id="status-elapsed"></span>
+          </div>
+
+          <div class="quick-actions">
+            <button class="chip" data-fill="start the game-designer agent: I want to design a new feature">new design doc</button>
+            <button class="chip" data-fill="start the godot-dev agent to implement the design doc at design/">start agent dev</button>
+            <button class="chip" data-fill="verify all scenes and report the results">verify scenes</button>
+            <button class="chip" data-fill="what is the current state of the project?">project state</button>
+          </div>
+
+          <div class="composer">
+            <textarea id="composer-input" rows="1" placeholder="Tell the agents what to build…"></textarea>
+            <button class="btn primary" id="send-btn">Send</button>
+          </div>
+
+          <div class="composer-hint">Enter to send · Shift+Enter for newline</div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="activity">
+      <div class="approvals-panel">
+        <div class="side-head">
+          <span class="side-label">Questions &amp; approvals</span>
+          <span class="badge" id="approvals-badge">0</span>
+        </div>
+        <div id="approvals-list"></div>
+        <div class="tree-empty" id="approvals-empty">nothing waiting on you</div>
+      </div>
+
+      <div class="activity-head">
+        <span class="side-label">Activity</span>
+        <div class="filter-chips">
+          <button class="filter-chip on" data-filter="all">All</button>
+          <button class="filter-chip" data-filter="tools">Tools</button>
+          <button class="filter-chip" data-filter="files">Files</button>
+        </div>
+      </div>
+
+      <div class="log-scroll" id="log-scroll"></div>
+
+      <div class="activity-foot">
+        <span class="live-dot"></span>
+        <span>live</span>
+        <button class="icon-btn" id="clear-log">clear</button>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<script src="agent-ui.js"></script>
+</body>
+</html>

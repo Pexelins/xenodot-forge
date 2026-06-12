@@ -1,0 +1,17 @@
+{
+  "name": "xenodot-forge",
+  "version": "0.1.0",
+  "description": "Xenodot Forge — POC web UI + agent workflow (design -> implement -> verify) for building Godot games with Claude Code",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node ui/server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.175",
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
