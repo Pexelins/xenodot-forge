@@ -40,12 +40,12 @@ Many CC0 low-poly models are flat-material or vertex-coloured — they have **no
 1. Instance the model, select the `MeshInstance3D`, Inspector → Mesh → right-click → **Make Unique**, then Surface 0 → Material → **Make Unique** (the gotcha — see `godot-texture-import-pixel-art` step 4).
 2. Set the material `texture_filter = 1` (NEAREST — the `= 3` mipmap trap applies here too).
 
-**3. Scale to footprint (the most common defect)**
+**3. Scale near-uniformly to a sane size (the most common defect)**
 
-Sourced models arrive at arbitrary units — a chair can import 0.1 m or 10 m tall. Scale it to the footprint the greybox box already defined:
+Sourced models arrive at arbitrary units — a chair can import 0.1 m or 10 m tall. Scale it to a sane real-world size **near-uniformly** (one scalar on all three axes):
 
-- Read the greybox box `size` (the target footprint, in metres) and the model's AABB (`get_aabb()` on the mesh, or read the bounds in the editor).
-- Set the **glTF import Root Scale** (Import dock), or the instanced node's `scale`, so the model's AABB matches the box footprint. Prefer one uniform scale (keep proportions); align the base, not the centre.
+- A sourced or procedurally-generated model already has **correct proportions**. Scale it to a sane real-world size; do **NOT** stretch it per-axis to fill the greybox cell's footprint. The greybox box is a placeholder _volume_, not a target shape — a bed is ~0.5 m tall no matter how tall its cell box was drawn. Per-axis stretching crushes/bloats the prop (a flat-shard bed, a room-dominating desk).
+- Pick the scalar from the model's _dominant_ dimension: read the model's AABB (`get_aabb()` or the editor bounds), take one axis with a known real size (e.g. a single bed ≈ 1.9 m long), and apply that one factor to all three axes via the **glTF import Root Scale** (Import dock) or the node's `scale`. A small tolerance (±~5 %) to seat it against a wall is fine; a different factor per axis is not.
 - Re-seat on the floor: floor top ≈ y 0, so the model's lowest point sits at y 0 (mesh pivots vary — offset the node, don't eyeball).
 
 **4. Scene structure — instance, don't make-local (the re-import decision)**
@@ -80,7 +80,7 @@ Then F5: the prop renders as the model (not a flat box), is the right size next 
 ## Verification checklist
 
 - [ ] `assets/models/<name>.glb` imported with no Output-panel errors
-- [ ] Model scaled to the greybox footprint (not giant / not tiny); base on the floor
+- [ ] Model scaled near-uniformly to a sane real-world size (not stretched per-axis to the cell, not giant / not tiny); base on the floor
 - [ ] Replaced node keeps its original **name** and **position**; nothing else moved
 - [ ] If textured: surface material Made Unique with `texture_filter = 1` (not 3); if flat/vertex-coloured: no texture step needed
 - [ ] Any imported Light/Camera was skipped (Advanced Import → Skip, or `-noimp`) — our rig owns lighting/framing
@@ -93,20 +93,21 @@ Then F5: the prop renders as the model (not a flat box), is the right size next 
 
 ## Error → Fix
 
-| Symptom                                                      | Fix                                                                                                                                                       |
-| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Prop is a giant / a speck                                    | Step 3 — scale to the greybox box footprint via Root Scale or node `scale`                                                                                |
-| Prop floats or sinks into the floor                          | Step 3 — align the model's lowest AABB point to y 0; offset the node for an off-centre pivot                                                              |
-| Model texture looks blurry / smeared                         | Step 2 — Make Unique the surface material, set `texture_filter = 1` (not 3)                                                                               |
-| Model renders black / unlit                                  | It has no material, or its material is unshaded with no albedo — Make Unique and set an albedo, or confirm the scene sun reaches it                       |
-| Half the model is invisible / inside-out                     | Back-face culling on inverted normals — set the material cull mode to Disabled, or re-export the source double-sided                                      |
-| `.gltf` upload rejected                                      | Only `.glb` (self-contained) is supported — re-export/convert to `.glb`                                                                                   |
-| Editor shows the box AND the model                           | The greybox `MeshInstance3D` wasn't replaced — swap its content, keep the node name/position (step 5)                                                     |
-| Scene has a stray light / camera / extra mesh from the model | Step 1a — open Advanced Import, Skip the node (or `-noimp` at source); our rig owns lighting/framing                                                      |
-| Material can't be edited / won't take a NEAREST filter       | It's embedded — step 1a, Advanced Import → that material → Storage = Files to extract a `.tres` into `resources/`                                         |
-| Lit surface looks inverted (bumps read as dents)             | Normal map uses the opposite Y convention — step 1a, set Normal Map = Flip Y on that texture (or drop the normal map; rarely needed at SubViewport scale) |
-| Re-importing an updated `.glb` doesn't change the prop       | The prop was made-local — step 4, it must be a nested instance under your node, not flattened into the `.tscn`                                            |
-| Editing one prop's collider changed every copy               | Shared shape resource — step 5, right-click the `CollisionShape3D` resource → Make Unique                                                                 |
+| Symptom                                                      | Fix                                                                                                                                                                                      |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prop is a giant / a speck                                    | Step 3 — scale near-uniformly to a sane real-world size via Root Scale or node `scale` (one scalar, not per-axis)                                                                        |
+| Prop floats or sinks into the floor                          | Step 3 — align the model's lowest AABB point to y 0; offset the node for an off-centre pivot                                                                                             |
+| Prop is crushed flat / bloated to dominate the room          | Step 3 — a per-axis (non-uniform) scale was used to fit the greybox footprint; re-scale near-uniformly (one scalar from the dominant dimension), the model's own proportions are correct |
+| Model texture looks blurry / smeared                         | Step 2 — Make Unique the surface material, set `texture_filter = 1` (not 3)                                                                                                              |
+| Model renders black / unlit                                  | It has no material, or its material is unshaded with no albedo — Make Unique and set an albedo, or confirm the scene sun reaches it                                                      |
+| Half the model is invisible / inside-out                     | Back-face culling on inverted normals — set the material cull mode to Disabled, or re-export the source double-sided                                                                     |
+| `.gltf` upload rejected                                      | Only `.glb` (self-contained) is supported — re-export/convert to `.glb`                                                                                                                  |
+| Editor shows the box AND the model                           | The greybox `MeshInstance3D` wasn't replaced — swap its content, keep the node name/position (step 5)                                                                                    |
+| Scene has a stray light / camera / extra mesh from the model | Step 1a — open Advanced Import, Skip the node (or `-noimp` at source); our rig owns lighting/framing                                                                                     |
+| Material can't be edited / won't take a NEAREST filter       | It's embedded — step 1a, Advanced Import → that material → Storage = Files to extract a `.tres` into `resources/`                                                                        |
+| Lit surface looks inverted (bumps read as dents)             | Normal map uses the opposite Y convention — step 1a, set Normal Map = Flip Y on that texture (or drop the normal map; rarely needed at SubViewport scale)                                |
+| Re-importing an updated `.glb` doesn't change the prop       | The prop was made-local — step 4, it must be a nested instance under your node, not flattened into the `.tscn`                                                                           |
+| Editing one prop's collider changed every copy               | Shared shape resource — step 5, right-click the `CollisionShape3D` resource → Make Unique                                                                                                |
 
 ---
 

@@ -73,9 +73,10 @@ export default [
   { ignores: ["node_modules/", "logs/"] },
   js.configs.recommended,
 
-  // Node side — server, shared lib, smoke test. stdout logging is the product.
+  // Node side — server, shared lib, smoke test, and *.check.js scripts run with
+  // bare node. stdout logging is the product.
   {
-    files: ["ui/server/**/*.js", "ui/lib/**/*.js", "ui/smoke-test.js"],
+    files: ["ui/server/**/*.js", "ui/lib/**/*.js", "ui/smoke-test.js", "ui/*.check.js"],
     languageOptions: {
       parser: tsPlugin.parser,
       parserOptions: {

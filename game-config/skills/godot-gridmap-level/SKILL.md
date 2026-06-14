@@ -49,6 +49,7 @@ Gotchas:
 - Collision shape comes from the tile's `StaticBody3D`/`CollisionShape3D` child and is welded to that item — **mesh and collider are one unit, forever in sync.**
 - **Sub-cell-height tiles (window sills, low walls, counters):** a tile shorter than `wall_height` must be Y-shifted so it seats on the floor, not floating at the cell centre. Set the `MeshInstance3D` origin to `Vector3(0, -(wall_height - tile_height) / 2, 0)` inside the tile source scene before exporting. Without this, a 1.5 m sill in a 3 m cell floats 0.75 m off the floor.
 - **Layered tiles (sill + glass pane):** a window tile can carry two `BoxMesh` surfaces in one MeshLibrary item — a solid sill (opaque `StandardMaterial3D`) and a taller glass pane (transparent `StandardMaterial3D`, `albedo_color.a ≈ 0.3`, `transparency = BaseMaterial3D.TRANSPARENCY_ALPHA`). Share the item's single `StaticBody3D`/`CollisionShape3D` sized to the sill — the glass pane is visual only. This is standard MeshLibrary authoring, not a GridMap limitation.
+- **Headless collision (no editor):** the `StaticBody3D`/`CollisionShape3D` child authoring above is the _editor_ MeshLibrary-export path. From a headless `@tool extends SceneTree` builder (step 4b) you set an item's collision directly: `mesh_library.set_item_shapes(id, [shape, transform, ...])` — a **FLAT, untyped `Array`** alternating a `Shape3D` then its `Transform3D` (e.g. `mesh_library.set_item_shapes(0, [BoxShape3D.new(), Transform3D.IDENTITY])`). There is **no `ShapePrimitive3D` type** in Godot 4 — only `set_item_shapes` with this flat array. Size the shape to the tile box so collider and mesh stay welded, exactly as the editor child would.
 
 ### 2. GridMap node + cell size
 
@@ -59,6 +60,7 @@ Add a `GridMap` to the level scene, assign the `.tres` MeshLibrary, and set
 
 - **Floor:** simplest is **one `StaticBody3D` floor slab** (a single `BoxMesh` + `BoxShape3D`) sized to the grid extent (`width*cell_size.x` × thin × `height*cell_size.z`), not a per-cell floor tile. (One slab beats hundreds of floor cells and never seams.)
 - **Furniture / items (code 4 + the `items` list ids):** beds span two cells, a nightstand is 0.5 m inside a 1.5 m cell — these do **not** fit uniform cells. Group item cells by id (same id = same prop) and instance small **prop scenes** (or plain `MeshInstance3D` nodes) at **computed** world positions (`Vector3(col*cell_size.x, y, row*cell_size.z)` + a fixed offset), as direct children of the root. Computed, never eyeballed — same discipline as the GridMap.
+- **Multi-cell same-id groups are ONE instance, not a per-cell count.** A 2-cell wardrobe or a 2-cell bed is a _single_ prop placed at the group's centre (the mean of its cells) and scaled/oriented to span them — never N separate instances. A design doc that writes a prop as `×N` is ambiguous (N units vs one N-cell piece); read a same-id cell group as one spanning instance at the centre, and if the doc truly meant N distinct props it must give them distinct ids.
 
 ### 4. The importer (`@tool`, author-time only)
 

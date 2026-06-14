@@ -1,73 +1,96 @@
-// Chat column — banners, user messages, agent messages, and thinking indicator.
+// Chat column, rendered from the store: user messages, agent messages (markdown
+// + copy), session banners, and the "thinking…" indicator. New entries are
+// appended by index (never a full rebuild), so scroll position and existing
+// nodes survive; the indicator stays pinned below the latest message.
 import { $, el } from "./dom.js";
 import { paint, agentLabel, agentInitial } from "./agents.js";
 import { renderMarkdown } from "./markdown.js";
+import { subscribe, update } from "./store.js";
 
 const chatScroll = $("chat-scroll");
 export const scrollChat = () => {
   chatScroll.scrollTop = chatScroll.scrollHeight;
 };
 
-/** @type {HTMLElement | null} */
-let thinkingEl = null;
-
-/** Show a pulsing "thinking…" indicator in the chat after the user message. */
-export function showThinking() {
-  clearThinking();
-  const wrap = el("div", "msg-thinking");
-  wrap.append(el("span", "thinking-dot"), el("span", "thinking-status", "thinking…"));
-  thinkingEl = wrap;
-  $("chat-inner").append(wrap);
-  scrollChat();
-}
-
-/** Update the thinking indicator with the current tool being executed.
- * @param {string} verb @param {string} [detail] */
-export function updateThinking(verb, detail) {
-  if (!thinkingEl) return;
-  const status = thinkingEl.querySelector(".thinking-status");
-  if (status) status.textContent = detail ? `${verb} · ${detail.slice(0, 60)}` : verb;
-}
-
-/** Remove the thinking indicator. */
-export function clearThinking() {
-  thinkingEl?.remove();
-  thinkingEl = null;
-}
-
-/** @param {string} text */
-export function addBanner(text) {
-  $("chat-inner").append(el("div", "session-banner", text));
-  scrollChat();
-}
-
-/** @param {string} text */
+/** Echo a user message into the chat — also used by the asset / transcript /
+ * draw-level wizards that post a prompt on the user's behalf. @param {string} text */
 export function addUser(text) {
-  $("chat-inner").append(el("div", "msg-user", text));
-  scrollChat();
+  update((s) => ({ ...s, chat: [...s.chat, { kind: "user", text }] }));
 }
 
-/** @param {string} who @param {string} text */
-export function addAgentMsg(who, text) {
+/** Show the pulsing "thinking…" indicator until the turn produces output. */
+export function showThinking() {
+  update((s) => ({ ...s, thinking: { active: true, label: "thinking…" } }));
+}
+
+/** @param {string} who @param {string} text @returns {HTMLElement} */
+function agentMsg(who, text) {
   const wrap = el("div", "msg-agent");
   const head = el("span", "who");
-  const label = agentLabel(who);
-  head.append(paint(el("span", "agent-avatar", agentInitial(who)), who));
-  head.append(` ${label}`);
+  head.append(paint(el("span", "agent-avatar", agentInitial(who)), who), ` ${agentLabel(who)}`);
   const copy = el("button", "copy-btn", "⧉");
   copy.title = "Copy message";
-  copy.onclick = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      copy.textContent = "✓";
-      setTimeout(() => (copy.textContent = "⧉"), 1200);
-    } catch {
-      copy.textContent = "✕";
-    }
+  copy.onclick = () => {
+    void navigator.clipboard.writeText(text).then(
+      () => {
+        copy.textContent = "✓";
+        setTimeout(() => {
+          copy.textContent = "⧉";
+        }, 1200);
+      },
+      () => {
+        copy.textContent = "✕";
+      },
+    );
   };
   const body = el("div", "body");
   body.append(renderMarkdown(text));
   wrap.append(head, copy, body);
-  $("chat-inner").append(wrap);
-  scrollChat();
+  return wrap;
+}
+
+/** @param {import("./store.js").ChatEntry} entry @returns {HTMLElement} */
+function renderEntry(entry) {
+  if (entry.kind === "user") return el("div", "msg-user", entry.text);
+  if (entry.kind === "banner") return el("div", "session-banner", entry.text);
+  return agentMsg(entry.who ?? "main", entry.text);
+}
+
+/** @type {HTMLElement | null} */
+let thinkingEl = null;
+/** How many of state.chat are already in the DOM. */
+let rendered = 0;
+
+/** @param {readonly import("./store.js").ChatEntry[]} chat */
+function onChat(chat) {
+  const inner = $("chat-inner");
+  const nearBottom = chatScroll.scrollHeight - chatScroll.scrollTop - chatScroll.clientHeight < 80;
+  for (const entry of chat.slice(rendered)) inner.append(renderEntry(entry));
+  rendered = chat.length;
+  if (thinkingEl) inner.append(thinkingEl); // keep the indicator below the latest
+  if (nearBottom) scrollChat();
+}
+
+/** @param {import("./store.js").Thinking} t */
+function onThinking(t) {
+  if (!t.active) {
+    thinkingEl?.remove();
+    thinkingEl = null;
+    return;
+  }
+  const label = t.label || "thinking…";
+  if (!thinkingEl) {
+    thinkingEl = el("div", "msg-thinking");
+    thinkingEl.append(el("span", "thinking-dot"), el("span", "thinking-status", label));
+    $("chat-inner").append(thinkingEl);
+    scrollChat();
+    return;
+  }
+  const status = thinkingEl.querySelector(".thinking-status");
+  if (status) status.textContent = label;
+}
+
+export function initChat() {
+  subscribe("chat", onChat);
+  subscribe("thinking", onThinking);
 }

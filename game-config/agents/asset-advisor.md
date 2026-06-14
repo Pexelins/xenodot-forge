@@ -32,7 +32,7 @@ You run at one of two gates each time — the caller says which.
 - **Texture** → a generation prompt + a generator from `library/sources/asset-sources.md`.
 - **Model** → a search spec (the noun to search, target footprint in metres, low-poly, licence) + a site from `library/sources/model-sources.md` (prefer poly.pizza / Kenney / Quaternius, CC0).
 
-Do not invent a hardcoded brief — write one specific to _this_ asset. The orchestrator files it as the `Asset: <name>` task note.
+Do not invent a hardcoded brief — write one specific to _this_ asset. The orchestrator files it by calling `mcp__ui__request_asset` with `{ name, kind: "texture" | "model", prompt: <your brief> }` (one call per asset) — so return the medium and the brief clearly enough for it to fill those fields.
 
 ### Gate 2 — verify-after (called after a file is uploaded/saved)
 
@@ -67,7 +67,7 @@ Read the actual file and use Bash for hard facts.
 
 - **Format** — a real glTF-binary `.glb` (not `.gltf` text, not a renamed zip/archive). File size sane for a low-poly prop (multi-MB is suspect → flag).
 - **Location** — under `assets/models/`, not stray. Stray = FAIL → godot-dev move task.
-- **Scale/units** — you can't fix scale, but you **spec it**: note the target footprint in metres in the wiring task so godot-dev scales to fit (skill step 3).
+- **Scale/units** — you can't fix scale, but you **spec it**: give one **target real-world size** (the dominant dimension in metres, e.g. "bed ≈ 1.9 m long") so godot-dev scales **near-uniformly** (skill step 3). Never spec a multi-axis footprint to "fill the cell" — a proportioned model must NOT be stretched per-axis; that flattens/bloats it.
 - **Materials** — note whether it's flat/vertex-coloured (no filter step) or carries a texture (needs NEAREST + Make-Unique).
 - **Licence** — record CC0 vs CC-BY (CC-BY ⇒ keep a credits note).
 
@@ -85,6 +85,6 @@ Read the actual file and use Bash for hard facts.
 **Gate 2:** the **verdict** (PASS / FAIL) with the checklist evidence. On PASS, the one-line **godot-dev task**:
 
 - Texture — e.g. "Import `assets/textures/grass_blade.png` (Filter=Nearest, Mipmaps=Off); in `resources/grass_blade_material.tres` bind `shader_parameter/blade_texture` and set `shader_parameter/use_texture = true`; run godot-verify."
-- Model — e.g. "Wire `assets/models/wardrobe.glb` per skill `godot-mesh-import-pixel-art`: scale to a ~1.5 m × 3 m footprint, instance in place of the `Wardrobe` node in `levels/shared_apartment.tscn` (keep its name + position), NEAREST + Make-Unique only if textured; run godot-verify."
+- Model — e.g. "Wire `assets/models/wardrobe.glb` per skill `godot-mesh-import-pixel-art`: scale **near-uniformly** to ~2 m tall (one scalar, keep proportions — do not stretch to the cell), instance in place of the `Wardrobe` node in `levels/shared_apartment.tscn` (keep its name + position), NEAREST + Make-Unique only if textured; run godot-verify."
 
 On FAIL, the reasons and the **corrected sourcing brief**.

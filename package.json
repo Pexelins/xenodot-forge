@@ -12,6 +12,7 @@
     "claude:install": "node ui/server/claude-install.js",
     "release": "node ui/server/release-stage.js",
     "check": "tsc --noEmit",
+    "test": "node ui/reducer.check.js",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix --max-warnings 0",
     "format": "prettier --write .",

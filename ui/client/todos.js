@@ -1,9 +1,13 @@
-// Todo / progress card (driven by the agent's TodoWrite calls).
+// Todo / progress card, rendered from the store's `todos` slice (the reducer
+// folds the agent's TodoWrite calls into it). The card is created once in the
+// chat column and its contents rebuilt on each change.
 import { $, el } from "./dom.js";
 import { scrollChat } from "./chat.js";
+import { subscribe } from "./store.js";
 
-/** @param {import("../lib/types.js").Todo[]} todos */
-export function renderTodos(todos) {
+/** @param {readonly import("../lib/types.js").Todo[]} todos */
+function render(todos) {
+  if (!todos.length) return; // no card until the first TodoWrite
   let card = $("todo-card");
   if (!card) {
     card = el("div", "card");
@@ -29,4 +33,8 @@ export function renderTodos(todos) {
   });
   card.append(head, track, list);
   scrollChat();
+}
+
+export function initTodos() {
+  subscribe("todos", render);
 }

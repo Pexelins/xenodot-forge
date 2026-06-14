@@ -4,22 +4,11 @@
 import { $, $$, el } from "./dom.js";
 import { paint, agentLabel } from "./agents.js";
 import { view } from "./state.js";
+import { subscribe, getState } from "./store.js";
 
-/** Tool name -> log "kind" (drives the verb-pill color and the filter chips).
- * @type {Record<string, string>} */
-export const VERB_KIND = {
-  Read: "read",
-  Glob: "read",
-  Grep: "read",
-  Write: "write",
-  Edit: "edit",
-  MultiEdit: "edit",
-  NotebookEdit: "edit",
-  Bash: "bash",
-  Task: "task",
-  Agent: "task",
-  Skill: "task",
-};
+// The pure formatters now live in format.js (DOM-free, so the reducer can share
+// them); re-exported here for approvals.js, which reads them alongside `shorten`.
+export { VERB_KIND, stripEnvPrefix } from "./format.js";
 
 /** @typedef {(row: HTMLElement) => boolean} FilterFn */
 /** @type {Record<string, FilterFn>} */
@@ -87,23 +76,10 @@ export const shorten = (t) =>
     ? t.replaceAll(view.projectDir + "/", "").replaceAll(view.projectDir, ".")
     : (t ?? "");
 
-// Display-only: drop leading VAR=value && assignments from commands — the
-// meaning starts after them (logs keep the full command).
-/** @param {string} t @returns {string} */
-export const stripEnvPrefix = (t) => t.replace(/^(?:\w+=\S+\s*&&\s*)+/, "");
-
-/** @param {import("../lib/types.js").ToolInput} [input] @returns {string} */
-export const toolDetail = (input) =>
-  input?.file_path ??
-  (input?.command ? stripEnvPrefix(input.command) : null) ??
-  input?.pattern ??
-  input?.skill ??
-  input?.title ??
-  (input ? JSON.stringify(input).slice(0, 120) : "");
-
-/** @param {import("../lib/types.js").LogEntry} entry */
-export function addLog(entry) {
-  entry.detail = shorten(entry.detail);
+/** Build (but don't mount) one log row from a store entry. Pure: never mutates
+ * the entry (paths are shortened into a local). @param {import("../lib/types.js").LogEntry} entry @returns {HTMLElement} */
+function buildLogRow(entry) {
+  const detail = shorten(entry.detail);
   const row = el(
     "div",
     "log-row is-new" +
@@ -130,17 +106,26 @@ export function addLog(entry) {
     row.append(el("span", "log-text", entry.text));
   } else {
     row.append(el("span", `verb-pill verb-${entry.kind}`, entry.verb));
-    const detail = el("span", "log-detail");
-    detail.append(
-      Object.assign(document.createElement("bdo"), { textContent: entry.detail ?? "" }),
-    );
-    row.append(detail);
+    const detailEl = el("span", "log-detail");
+    detailEl.append(Object.assign(document.createElement("bdo"), { textContent: detail }));
+    row.append(detailEl);
   }
   if (!rowVisible(row)) row.style.display = "none";
-  $("log-scroll").prepend(row);
+  return row;
 }
 
-/** Wire the filter chips and the clear button. */
+/** Append-only: how many of state.activity are already in the DOM. */
+let rendered = 0;
+
+/** Prepend every entry the store gained since the last paint (newest ends on
+ * top). @param {readonly import("../lib/types.js").LogEntry[]} log */
+function onActivity(log) {
+  const box = $("log-scroll");
+  for (const entry of log.slice(rendered)) box.prepend(buildLogRow(entry));
+  rendered = log.length;
+}
+
+/** Wire the filter chips, the clear button, and the store subscription. */
 export function initActivityLog() {
   $$(".filter-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
@@ -154,5 +139,7 @@ export function initActivityLog() {
   $("agent-filter")?.addEventListener("change", applyFilters);
   $("clear-log").onclick = () => {
     $("log-scroll").replaceChildren();
+    rendered = getState().activity.length; // keep the index aligned after a manual clear
   };
+  subscribe("activity", onActivity);
 }

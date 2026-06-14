@@ -32,7 +32,7 @@ $GODOT --headless --path . --script tools/verify_scene.gd -- levels/basic_room.t
 
 Loading the scenes also surfaces `SCRIPT ERROR:` parse errors in attached scripts and missing ext_resource files.
 
-Known blind spots: `shader_parameter/*` and `metadata/*` are whitelisted (dynamic); property _values_ are not checked, only names.
+Known blind spots: `shader_parameter/*`, `metadata/*`, and `item/*` (MeshLibrary items, dynamic) are whitelisted; property _values_ are not checked, only names.
 
 ## Layer 2 — smoke run (catches runtime errors)
 
@@ -79,16 +79,17 @@ Only then may you report the change as verified. If you cannot run the binary (n
 
 ## Error → Fix
 
-| Symptom                                             | Fix                                                                                                                                                                               |
-| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `VERIFY-FAIL ... unknown property "X"`              | Godot 3 name or typo; find the Godot 4 name (e.g. `material/0` → `surface_material_override/0`, `energy_multiplier` → `light_energy`)                                             |
-| `VERIFY-FAIL ... could not resolve node`            | `parent=`/`name=` path in the .tscn doesn't match the tree — check section order and parent paths                                                                                 |
-| `SCRIPT ERROR: Parse Error` during layer 1          | The attached .gd fails to compile; fix the script, not the scene                                                                                                                  |
-| `ERROR: ... Invalid UID`                            | Hand-written uid string; remove the `uid="..."` attribute and let the editor assign one on save                                                                                   |
-| Layer 2 hangs                                       | Scene waits on input/window; `--quit-after N` missing or a script blocks `_ready` — check for infinite loops                                                                      |
-| `VERIFY-RENDER: FAIL ... flat color` on `main.tscn` | Camera aimed at nothing (wrong transform — see "Hand-authoring .tscn rules" above), no current Camera3D in the viewport, or `background_mode = Sky` with no Sky resource attached |
-| Layer 3 flat color on a level or entity scene       | Expected in Main-shell architecture — levels and entities have no camera (Main provides it). Layer 3 does not apply to these scenes; only layers 1–2 are required                 |
-| Layer 3 looks wrong but says OK                     | Spread check only proves _something_ rendered; composition/look is still the human's call — they must RUN the scene (F5/F6), not judge from the editor viewport                   |
+| Symptom                                                             | Fix                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `VERIFY-FAIL ... unknown property "X"`                              | Godot 3 name or typo; find the Godot 4 name (e.g. `material/0` → `surface_material_override/0`, `energy_multiplier` → `light_energy`)                                                                                    |
+| `VERIFY-FAIL ... could not resolve node`                            | `parent=`/`name=` path in the .tscn doesn't match the tree — check section order and parent paths                                                                                                                        |
+| `SCRIPT ERROR: Parse Error` during layer 1                          | The attached .gd fails to compile; fix the script, not the scene                                                                                                                                                         |
+| `ERROR: ... Invalid UID`                                            | Hand-written uid string; remove the `uid="..."` attribute and let the editor assign one on save                                                                                                                          |
+| Layer 2 hangs                                                       | Scene waits on input/window; `--quit-after N` missing or a script blocks `_ready` — check for infinite loops                                                                                                             |
+| `VERIFY-RENDER: FAIL ... flat color` on `main.tscn`                 | Camera aimed at nothing (wrong transform — see "Hand-authoring .tscn rules" above), no current Camera3D in the viewport, or `background_mode = Sky` with no Sky resource attached                                        |
+| Layer 3 flat color on a level or entity scene                       | Expected in Main-shell architecture — levels and entities have no camera (Main provides it). Layer 3 does not apply to these scenes; only layers 1–2 are required                                                        |
+| Layer 3 looks wrong but says OK                                     | Spread check only proves _something_ rendered; composition/look is still the human's call — they must RUN the scene (F5/F6), not judge from the editor viewport                                                          |
+| `Leaked instance` / `RID allocations leaked at exit` at process end | Benign — Godot 4 headless renderer cleanup noise on teardown, NOT an error. Ignore; it does not fail any layer. Only matched lines from the layer-2 grep (`SCRIPT ERROR`/`ERROR`/`WARNING` during the run) are failures. |
 
 ## RTK note
 

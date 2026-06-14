@@ -1,7 +1,8 @@
 // Composer — the message input box, its auto-grow, send, and quick-fill chips.
 import { $, $$, $input, fillComposer } from "./dom.js";
 import { addUser, showThinking } from "./chat.js";
-import { send, setBusy } from "./websocket.js";
+import { send } from "./websocket.js";
+import { subscribe, update } from "./store.js";
 
 const textarea = $input("composer-input");
 
@@ -26,8 +27,9 @@ function sendMessage() {
   addUser(text);
   showThinking();
   send({ type: "user_input", text });
-  $("session-meta").textContent = "running";
-  setBusy(true); // a hive turn is now in flight → button shows "Queue Message"
+  // Optimistically mark the hive busy + running; statusbar renders the line and
+  // the button below reads `busy`.
+  update((s) => ({ ...s, busy: true, session: { ...s.session, status: "running" } }));
   textarea.value = "";
   autoGrow();
 }
@@ -36,9 +38,7 @@ function sendMessage() {
 export function initComposer() {
   textarea.addEventListener("input", autoGrow);
   $("send-btn").addEventListener("click", sendMessage);
-  document.addEventListener("hive-busy", (e) => {
-    updateSendBtn(Boolean(/** @type {CustomEvent} */ (e).detail));
-  });
+  subscribe("busy", updateSendBtn);
   textarea.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
