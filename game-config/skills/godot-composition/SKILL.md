@@ -1,6 +1,6 @@
 ---
 name: godot-composition
-description: Composition conventions for this Godot project — "SOLID translated to Godot": component nodes over inheritance, signals up / calls down, scene as the unit of composition, and the explicit rules for WHEN to modularize (and when not to). Load this skill before structuring any entity with more than one behavior, before any refactor/extraction, when a script grows past one job, or when someone proposes a base-class hierarchy or an autoload for shared behavior.
+description: Composition conventions ("SOLID translated to Godot") — component nodes over inheritance, signals up / calls down, scene as the unit of composition, and when (not) to modularize. Load before structuring an entity with more than one behavior, before any refactor/extraction, when a script grows past one job, or when someone proposes a base-class hierarchy or a shared-behavior autoload.
 ---
 
 # Godot Composition (SOLID, translated)

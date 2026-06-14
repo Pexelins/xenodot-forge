@@ -1,6 +1,6 @@
 ---
 name: godot-3d-pixelation
-description: Set up pixelated (low-resolution, crisp) rendering of a 3D scene in Godot 4.x using a SubViewport, the foundation of the "3D pixel art" visual style. Use this skill whenever the user is working on a Godot project and mentions pixel art with 3D, pixelated 3D, retro/PSX/low-res rendering, SubViewport rendering resolution, "crisp pixels", or asks why their downscaled viewport looks blurry. Also use it when restructuring a Godot scene tree so that 3D content renders at a lower internal resolution than the window.
+description: SubViewport-based low-resolution crisp rendering of a 3D scene in Godot 4.x — the foundation of the "3D pixel art" style. Use for pixelated/retro/PSX/low-res 3D, setting SubViewport render resolution, "crisp pixels", restructuring a scene tree so 3D renders below window resolution, or when a downscaled viewport looks blurry.
 ---
 
 # Godot 3D Pixelation (SubViewport technique)

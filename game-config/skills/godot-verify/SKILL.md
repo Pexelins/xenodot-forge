@@ -1,6 +1,6 @@
 ---
 name: godot-verify
-description: Verify Godot scenes and scripts actually load, run, and visibly render, including invalid property names that Godot silently drops and "valid but renders nothing" scenes (black screen, no errors). Use this skill after ANY change to .tscn/.gd files and before claiming work is done or verified — never assert "the scene runs" without running these checks. Also use it when a scene loads but looks wrong (missing material, wrong lighting — the signature of a silently dropped property) or when the game window is empty/black with no errors.
+description: Verify Godot scenes/scripts actually load, run, and visibly render — catching silently-dropped invalid properties and "valid but renders nothing" (black-screen, no-error) scenes. Use after ANY .tscn/.gd change and before claiming work done or verified — never assert a scene runs without these checks. Also when a scene loads but looks wrong (missing material/lighting — the silent-drop signature) or the window is empty/black with no errors.
 ---
 
 # Godot Verify (headless + render checks)

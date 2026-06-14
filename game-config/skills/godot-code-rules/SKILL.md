@@ -1,6 +1,6 @@
 ---
 name: godot-code-rules
-description: Strict GDScript code rules for this project — the tsconfig-strict + ESLint equivalent. Full typing (no untyped declarations, no Variant outside documented SEAMs), explicit return types, warnings-as-errors, size caps, file headers, and the @warning_ignore policy, all gated by tools/validate.sh. Load this skill BEFORE writing or editing ANY .gd file, whenever validate.sh / gdlint / gdformat fails, whenever a typed-GDScript error (UNTYPED_DECLARATION, UNSAFE_*) appears, or when deciding whether code may use Variant, duck typing, or @warning_ignore.
+description: Strict typed-GDScript rules (the tsconfig-strict + ESLint equivalent) — full typing, explicit return types, warnings-as-errors, size caps, file headers, @warning_ignore policy, gated by tools/validate.sh. Load BEFORE writing or editing ANY .gd file, when validate.sh / gdlint / gdformat fails, on a typed-GDScript error (UNTYPED_DECLARATION, UNSAFE_*), or when deciding whether code may use Variant, duck typing, or @warning_ignore.
 ---
 
 # Godot Code Rules (strict mode)

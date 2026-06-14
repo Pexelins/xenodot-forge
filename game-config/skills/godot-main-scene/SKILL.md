@@ -1,6 +1,6 @@
 ---
 name: godot-main-scene
-description: Create the Main scene entry point for a Godot 4.x project — a thin main.tscn set as run/main_scene that owns the persistent shell (SubViewport pixelation rig, camera rig, UI) and loads/swaps level scenes under a container node. Use this skill when the project needs a main scene, when run/main_scene is unset in project.godot, when the user asks how levels should be loaded or switched, before adding a second level, or whenever deciding if something belongs in the Main scene, a level, or an autoload.
+description: Create the thin main.tscn entry point (set as run/main_scene) that owns the persistent shell — SubViewport pixelation rig, camera rig, UI — and loads/swaps level scenes under a container node. Use when the project needs a main scene, run/main_scene is unset in project.godot, levels need loading/switching, before adding a second level, or when deciding whether something belongs in Main, a level, or an autoload.
 ---
 
 # Godot Main Scene (entry point + level loading)

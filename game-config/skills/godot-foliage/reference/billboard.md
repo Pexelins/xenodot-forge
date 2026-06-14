@@ -1,9 +1,4 @@
----
-name: godot-multimesh-billboard
-description: Spawn a dense billboard grass field as a MultiMeshInstance3D in Godot 4.x for a 3D pixel-art project — QuadMesh blades, camera-facing billboard via camera BASIS (orthographic-safe), alpha-scissor cutout, shadow casting disabled, and a fake-perspective UV trick to prevent blades from looking flat under an orthographic camera. Use this skill before building any MultiMesh foliage or vegetation, when billboard grass blades render edge-on or flat under an orthographic camera, when grass casts unwanted shadow patches on the ground, or when choosing between alpha-blend and alpha-scissor for foliage in a pixel-art SubViewport.
----
-
-# Godot MultiMesh Billboard Grass
+# Foliage layer 1 — MultiMesh Billboard Grass (base rig)
 
 Dense pixel-art grass via `MultiMeshInstance3D`. Each blade is a `QuadMesh` camera-faced using the camera's **basis** (not `look_at` — orthographic has no vanishing point, so a perspective look-at causes edge-on blades as the camera moves). Alpha-scissor keeps edges crisp at low resolution; alpha-blend causes sort artifacts and partial-pixel fringing. Shadow casting is disabled on the mesh so blades don't cast patches on the ground.
 
@@ -53,7 +48,7 @@ void vertex() {
     UV.x = (UV.x - 0.5) * perspective_scale + 0.5;
     UV.x = clamp(UV.x, 0.0, 1.0);
 
-    // No vertex displacement this slice. The godot-pixel-art-wind skill adds sway here.
+    // No vertex displacement this slice. The wind layer (reference/wind.md) adds sway here.
 }
 
 void fragment() {
@@ -131,8 +126,8 @@ F5: blades should stand upright, face the camera as you Tab around, and cast no 
 - **Always disable shadow casting** on the `MultiMeshInstance3D` for grass blades.
 - Shader lives in `shaders/material/` — not `shaders/post/` (that folder is screen-space only).
 
-## Later (follow-up slices)
+## Next layers (same folder)
 
-- `godot-pixel-art-wind` — noise-driven vertex animation layered onto this shader's `vertex()`.
-- `godot-pixel-art-quantization` — time quantization per-instance for low-framerate look.
-- Player displacement — radial mask from player position, view-space axis split.
+- **reference/wind.md** — noise-driven vertex animation layered onto this shader's `vertex()`.
+- **reference/quantization.md** — time quantization per-instance for the low-framerate look.
+- Player displacement — radial mask from player position, view-space axis split (not yet built).

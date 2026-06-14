@@ -1,11 +1,14 @@
 // Deploy the framework's vendored game config (game-config/) into a game project's
 // .claude/, WITHOUT overwriting files that already exist. Forkers run this once after
-// `npm run setup`. Use --force for a clean reset (overwrite everything).
+// `npm run setup`. Use --force for a clean reset: it overwrites existing files AND
+// prunes orphans in agents/ and skills/ (so deletions upstream propagate), matching the
+// mirror claude-sync writes. Other .claude/ files (settings.local.json, agent-memory,
+// eval scratch) are left untouched.
 //
 // Usage: npm run claude:install               (target = configured game, see config.js)
 //        npm run claude:install -- --force
 //        node ui/server/claude-install.js /path/to/game [--force]
-import { existsSync, mkdirSync, readdirSync, copyFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, copyFileSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { PROJECT_DIR, FRAMEWORK_DIR } from "./config.js";
@@ -49,6 +52,15 @@ function hasRtk() {
     return true;
   } catch {
     return false;
+  }
+}
+
+// --force is a clean reset: mirror the parts game-config ships (agents/, skills/)
+// by wiping them first, so files removed upstream don't linger. Without --force we
+// only fill in missing files, so this prune never runs and nothing is destroyed.
+if (force) {
+  for (const part of ["agents", "skills"]) {
+    rmSync(path.join(dest, part), { recursive: true, force: true });
   }
 }
 

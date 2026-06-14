@@ -7,55 +7,29 @@ metadata:
 
 # Tasks MCP — Plan & Scratchpad
 
-`mcp__ui__tasks` is a persistent task board (stored at `.xenodot/tasks.json`, shown in the UI right rail). Use it in every run as:
+`mcp__ui__tasks` is a persistent task board (`.xenodot/tasks.json`, shown in the UI right rail).
+Calling it never pauses the session — call it freely between other tool calls.
 
-1. **Plan** — add a batch at the start so the user sees every step before you begin.
-2. **Scratchpad** — update `status` and `note` as you work so progress is visible live.
-
-## Operations
+**Every run:** at START add your full plan as one batch; set each task `in_progress` before its
+step and `done` after; leave nothing `pending`/`in_progress` when you return.
 
 ```jsonc
-// Add a batch at the start of your run
-{ "op": "add", "tasks": [
-  { "title": "Read design doc",   "owner": "agent" },
-  { "title": "Build scene",       "owner": "agent" },
-  { "title": "Run validate.sh",   "owner": "agent" }
-]}
-
-// Single add
-{ "op": "add", "title": "Fix collision", "owner": "agent" }
-
-// Mark in-progress (+ scratchpad note)
-{ "op": "update", "title": "Build scene", "status": "in_progress", "note": "working on wall merge" }
-
-// Mark done
+{ "op": "add", "tasks": [ { "title": "Build scene", "owner": "agent" } ] } // batch at start
+{ "op": "update", "title": "Build scene", "status": "in_progress", "note": "scratchpad" }
 { "op": "update", "title": "Build scene", "status": "done" }
-
-// Remove (when a step turns out to be unnecessary)
-{ "op": "remove", "title": "Build scene" }
+{ "op": "remove", "title": "Build scene" }                                  // step turned out unneeded
 ```
 
-## Fields
+- `title` (required) is the key for `update`/`remove`. `status`: `pending` → `in_progress` → `done`.
+- `owner`: `"agent"` (default), or `"user"` only for things the human must supply (an asset, a
+  decision) — `user` tasks surface in the task / Get Assets modal. `note` is free-text scratchpad.
 
-| Field    | Values                                   | Notes                                                               |
-| -------- | ---------------------------------------- | ------------------------------------------------------------------- |
-| `title`  | string                                   | Required; used as the key for `update`/`remove`                     |
-| `owner`  | `"agent"` (default) \| `"user"`          | `"user"` tasks surface in the Get Assets / task modal for the human |
-| `status` | `"pending"` → `"in_progress"` → `"done"` |                                                                     |
-| `note`   | string                                   | Free text; use as scratchpad — visible in the UI                    |
+## Self-gate (before any handoff or return)
 
-## Pattern for every run
+Before calling any handoff tool or ending your run, read `.xenodot/tasks.json` directly:
 
-```
-START  → op: add   (batch — full plan)
-BEFORE each step → op: update status: in_progress  (+note if useful)
-AFTER  each step → op: update status: done
-END    → all tasks done; no stale entries left
+```bash
+cat .xenodot/tasks.json
 ```
 
-## Rules
-
-- Add the plan before doing any work — not after.
-- Never leave tasks in `pending` or `in_progress` when you return.
-- `owner: "user"` only for things the human must supply (an asset, a decision) — not for your own steps.
-- Calling `mcp__ui__tasks` never pauses the session; call it freely between other tool calls.
+Confirm every task you own has `status: "done"`. If any are `pending` or `in_progress`, mark them done (or remove them if they turned out unneeded) **before** the handoff call — not after. A server reset between your last task-update and your handoff leaves ghost tasks the orchestrator must clean up manually. Closing tasks is the last thing you do before returning. Keep the open-task window small: mark a task `done` the moment its step finishes, not in a batch at the end — an unclosed task is only exposed to a reset for as long as you leave it open. Prefer one `in_progress` task at a time.

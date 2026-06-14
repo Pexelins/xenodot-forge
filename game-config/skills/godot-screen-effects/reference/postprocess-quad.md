@@ -1,9 +1,4 @@
----
-name: godot-postprocess-quad
-description: Set up a fullscreen post-processing quad in Godot 4.x (a QuadMesh on a MeshInstance3D child of the camera with a spatial shader that snaps to the screen), the required rig for any screen-space effect that needs the depth or normal textures, such as outlines, edge detection, fog, or depth visualization. Use this skill whenever the user wants a custom post-processing effect in 3D, mentions a fullscreen quad, asks why their post-process shader only covers a small square, or before writing any shader that samples hint_depth_texture or hint_normal_roughness_texture.
----
-
-# Godot Fullscreen Post-Process Quad
+# Screen-effects layer 1 — Fullscreen Post-Process Quad (rig)
 
 Rig a quad so a spatial shader runs over every screen pixel with access to depth/normal textures (CompositorEffects and CanvasItem shaders cannot do this as simply). Source of truth: Godot docs "Advanced post-processing".
 
@@ -11,7 +6,7 @@ Rig a quad so a spatial shader runs over every screen pixel with access to depth
 
 - Godot **4.3+** (reversed-Z depth; see Error table for 4.0–4.2).
 - An active `Camera3D` in the scene. If the project uses the SubViewport pixelation setup (skill `godot-3d-pixelation`), the camera — and therefore this quad — lives **inside the SubViewport**, so the effect is applied _before_ upscaling. That is the correct order for pixel-art outlines.
-- No shader knowledge needed for this skill; it produces a working stub.
+- No shader knowledge needed for this layer; it produces a working stub.
 
 ## Project conventions
 
@@ -37,7 +32,7 @@ void vertex() {
 }
 
 void fragment() {
-	// Stub: solid magenta proves the rig works. Replace in later skills.
+	// Stub: solid magenta proves the rig works. Replace in later layers.
 	ALBEDO = vec3(1.0, 0.0, 1.0);
 }
 ```
@@ -50,7 +45,7 @@ void fragment() {
 - [ ] Rotating/moving the camera changes nothing (still fully magenta). If scene peeks through at any angle → cull margin or POSITION line is wrong.
 - [ ] Scene tree shows `Camera3D/PostProcessQuad`; reparenting it elsewhere breaks editor preview.
 
-After verifying, leave the rig in place; subsequent skills (`godot-screen-textures`, edge-detection skills) replace only the `fragment()` body.
+After verifying, leave the rig in place; the buffer-access layer (reference/screen-textures.md) and edge-detection effects replace only the `fragment()` body.
 
 ## Error → Fix
 

@@ -16,6 +16,7 @@ import {
   FORM_TOOL,
   TASK_TOOL,
   MODEL,
+  EFFORT,
   ORCHESTRATOR_PROMPT,
   POLICIES,
   PROJECT_DIR,
@@ -235,6 +236,10 @@ function runSession({
           // Pick up the project's .claude/ (agents, skills) and CLAUDE.md.
           settingSources: ["user", "project", "local"],
           model: MODEL,
+          // Orchestrator routes more than it reasons; sub-agents override via their
+          // own `effort:` frontmatter while active. Skill discovery stays default
+          // ("all") so sub-agents can still invoke + preload the project's skills.
+          effort: EFFORT,
           // Keep Claude Code's tooling behavior, append the orchestrator role.
           systemPrompt: { type: "preset", preset: "claude_code", append: ORCHESTRATOR_PROMPT },
           canUseTool,

@@ -1,15 +1,10 @@
----
-name: godot-pixel-art-wind
-description: Add noise-driven vertex wind animation to a billboard grass shader in Godot 4.x — two divergence-rotated noise samples (one scaled by π to kill repetition), per-instance world-position phase offset so every blade sways independently, rotation around the wind-perpendicular axis for stable direction across camera angles. Use this skill when adding wind animation to billboard grass, when all grass blades sway in unison (missing per-instance phase), when wind direction looks wrong or slides under an orthographic camera, or when layering animation on top of godot-multimesh-billboard.
----
+# Foliage layer 2 — Pixel-Art Wind (noise-driven vertex animation)
 
-# Godot Pixel-Art Wind (noise-driven vertex animation)
-
-Layered on top of `godot-multimesh-billboard`. Adds a noise-driven sway to the `vertex()` function of `grass_billboard.gdshader`. Two noise samples at diverging angles — one scaled by an irrational (π) — kill the visible tiling repetition that a single noise produces. Each blade is phase-shifted by its world-position so blades don't all hit the peak sway at the same moment.
+Layered on top of the base rig (reference/billboard.md). Adds a noise-driven sway to the `vertex()` function of `grass_billboard.gdshader`. Two noise samples at diverging angles — one scaled by an irrational (π) — kill the visible tiling repetition that a single noise produces. Each blade is phase-shifted by its world-position so blades don't all hit the peak sway at the same moment.
 
 ## Requirements
 
-- **godot-multimesh-billboard** — this skill extends that shader's `vertex()`. The billboard logic and fake-perspective UV must already be present.
+- **reference/billboard.md** — this layer extends that shader's `vertex()`. The billboard logic and fake-perspective UV must already be present.
 - **godot-verify** — run after changes.
 
 ## Steps
@@ -84,7 +79,7 @@ F5: blades should sway independently — no synchronized snapping. Adjust `wind_
 - **Two noise samples with one scaled by π** — a single noise produces visible tile seams across the field.
 - **Rotate around the wind-perpendicular axis** so sway direction is stable across camera angles.
 
-## Later
+## Next layer (same folder)
 
-- `godot-pixel-art-quantization` — quantize `TIME` before feeding to wind so sway snaps to low-framerate steps.
-- Player displacement — add a radial push to `VERTEX` based on player world position passed as a uniform.
+- **reference/quantization.md** — quantize `TIME` before feeding to wind so sway snaps to low-framerate steps.
+- Player displacement — add a radial push to `VERTEX` based on player world position passed as a uniform (not yet built).

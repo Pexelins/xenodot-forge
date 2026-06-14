@@ -1,6 +1,6 @@
 ---
 name: godot-project-conventions
-description: Establish or verify the baseline conventions of a Godot 4.x 3D pixel-art project — renderer, window/stretch settings, folder layout, naming, input map — and record them in the project's CLAUDE.md so every other skill and session reads decisions from one place. Use this skill FIRST in any new Godot project, whenever the user says "set up the project", "start a POC", "initialize the game", or whenever another godot-* skill is about to run and no "## Project conventions" section exists in CLAUDE.md yet.
+description: Establish or verify a Godot 4.x 3D pixel-art project's baseline — renderer, window/stretch, folder layout, naming, input map — and record it in CLAUDE.md as the single source of truth. Use FIRST in any new project, on "set up the project" / "start a POC" / "initialize the game", or whenever another godot-* skill is about to run and CLAUDE.md has no "## Project conventions" section yet.
 ---
 
 # Godot Project Conventions
@@ -44,7 +44,7 @@ This skill is the keystone: it makes project-wide decisions once, applies them t
 - Folders: scenes/, entities/, levels/, shaders/post/, resources/.
 - Naming: node names PascalCase; files and folders snake_case; one scene per entity in entities/<name>/.
 - Input actions: move_left, move_right, move_forward, move_back, jump.
-- Shader contract: single post-process shader at res://shaders/post/post_process.gdshader; helpers get_linear_depth(), get_normal() (skill: godot-screen-textures).
+- Shader contract: single post-process shader at res://shaders/post/post_process.gdshader; helpers get_linear_depth(), get_normal() (skill: godot-screen-effects).
 - Code rules: strict typed GDScript (skill: godot-code-rules) — warnings-as-errors, gdlint/gdformat, validate gate.
 - Rule for AI sessions: read this section before structural changes; load godot-code-rules before writing or editing any .gd file; record new project-wide decisions here, not in chat.
 ```

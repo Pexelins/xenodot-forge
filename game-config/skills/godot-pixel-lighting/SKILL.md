@@ -1,6 +1,6 @@
 ---
 name: godot-pixel-lighting
-description: Pixel-readability-first lighting for this project's 3D pixel-art blockout — a single DirectionalLight3D "sun" with hard shadows, Sky/Color ambient as the fill, and Filmic tonemap + fixed exposure on the SubViewport's Environment so nothing blows out. Use this skill when lighting or re-tuning a level's lights, when a jump landing or the player's ground shadow isn't readable, when the scene renders black or stays dark despite a light, when shadows show acne/stripes or detach (peter-panning) or pop in at distance, when highlights are blown white, or before touching the WorldEnvironment tonemap/exposure on the SubViewport. Pixel-art-specific: it deliberately chooses hard shadows over soft filtering and Filmic over ACES/AgX.
+description: Pixel-readability-first lighting for the 3D pixel-art blockout — one DirectionalLight3D "sun" with hard shadows, Sky/Color ambient fill, Filmic tonemap + fixed exposure on the SubViewport Environment. Use when lighting or re-tuning a level, when a ground shadow or jump landing isn't readable, when the scene renders black or blows out highlights, when shadows show acne/peter-panning/distance pop, or before touching the WorldEnvironment tonemap/exposure. Deliberately hard shadows over soft, Filmic over ACES/AgX.
 ---
 
 # Godot Pixel Lighting (sun + ambient + Filmic tonemap, hard shadows)
@@ -73,9 +73,9 @@ If a level has no sky, use `AMBIENT_SOURCE_COLOR` with a mid `ambient_light_colo
 On the **same** SubViewport Environment, set a Filmic tonemap and pin the exposure so bright surfaces (lit floor, light-colored boxes) don't clip to pure white.
 
 ```gdscript
-env.tonemap_mode = Environment.TONE_MAP_FILMIC
+env.tonemap_mode = Environment.TONE_MAPPER_FILMIC  # = 3
 env.tonemap_exposure = 1.0   # fixed; lower (~0.8) if highlights still blow out
-# Out of scope (roadmap): TONE_MAP_ACES, TONE_MAP_AGX, auto-exposure, SSAO.
+# Out of scope (roadmap): TONE_MAPPER_ACES, TONE_MAPPER_AGX, auto-exposure, SSAO.
 ```
 
 `.tscn` equivalent on the `Environment` sub-resource: `tonemap_mode = 3` (Filmic), `tonemap_exposure = 1.0`. Note: AgX is 4.6-only; we target 4.3+, so Filmic is the deliberate choice, not a fallback we are forced into.

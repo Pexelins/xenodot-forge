@@ -1,6 +1,6 @@
 ---
 name: gd-utilities-level-design
-description: Game Design utilities — level-design interview principles for the level-designer agent. Distilled from theory (Langeskov/Lilford): verticality, space contrast, and shape variety. Use when starting a level-designer interview, before asking the user any scene questions, to establish the level's concept FIRST (what it is about) and then ensure the brief captures variety and doesn't produce flat/boxy/monotonous blockouts.
+description: Level-design interview principles for the level-designer agent (from Langeskov/Lilford theory) — verticality, space contrast, shape variety. Use when starting a level-designer interview — establish the level's concept FIRST (what it is about), then ensure the brief captures variety and avoids flat/boxy/monotonous blockouts.
 ---
 
 # GD Utilities — Level Design Principles

@@ -1,15 +1,10 @@
----
-name: godot-pixel-art-quantization
-description: Add low-framerate "handdrawn" stylization to animated shaders in Godot 4.x by quantizing the TIME value fed to vertex animation — each blade or object snaps to discrete time steps instead of animating continuously, and a per-instance phase offset ensures they don't all snap on the same frame. Use this skill when grass or foliage animation looks too smooth/fluid for a pixel-art game, when all blades snap in unison (missing per-instance phase), when adding the handdrawn choppy-animation look to any TIME-driven shader, or when layering quantization on top of godot-pixel-art-wind.
----
-
-# Godot Pixel-Art Quantization (low-framerate TIME snapping)
+# Foliage layer 3 — Pixel-Art Quantization (low-framerate TIME snapping)
 
 Quantizes the `TIME` built-in before feeding it to any animation (wind, water, etc.) so the shader updates in discrete steps — giving the "handdrawn, low-framerate" look of traditional pixel-art animation. A per-instance phase offset shifts each blade's snap boundary so they update on different frames rather than all popping at once.
 
 ## Requirements
 
-- **godot-pixel-art-wind** — this skill modifies the `TIME` value that wind (or any animation) consumes. The wind shader must already be in place.
+- **reference/wind.md** — this layer modifies the `TIME` value that wind (or any animation) consumes. The wind shader must already be in place.
 - **godot-verify** — run after changes.
 
 ## Steps
@@ -63,7 +58,7 @@ VERTEX += perp * wind * wind_strength * sway_mask;
 ### 3 — Tune in the Inspector
 
 - `animation_fps = 8` — 8 fps is a good pixel-art default. Lower (4–6) = choppier/more stylized. Higher (12–24) = smoother.
-- Keep `wind_speed` and `wind_strength` from the wind skill; they work independently of quantization.
+- Keep `wind_speed` and `wind_strength` from the wind layer; they work independently of quantization.
 
 ### 4 — Verify
 
