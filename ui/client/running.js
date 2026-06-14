@@ -5,11 +5,17 @@ import { $, el } from "./dom.js";
 import { paint, agentLabel } from "./agents.js";
 import { send } from "./websocket.js";
 
-/** @typedef {{ label: string, desc: string, started: number, background?: boolean, taskId?: string, elapsed?: HTMLElement }} Running */
+/** @typedef {{ label: string, desc: string, started: number, background?: boolean, taskId?: string, stopping?: boolean, elapsed?: HTMLElement }} Running */
 /** @type {Map<string, Running>} */
 const running = new Map(); // tool_use id -> running agent
 /** @type {ReturnType<typeof setInterval> | undefined} */
 let timer;
+
+// How long to wait for the server's task_notification after a ✕ before the chip
+// removes itself. A live stop is acknowledged in ~1-2s; an already-exited agent
+// has no process to stop and emits no notification, so without this self-heal
+// the chip would sit on "stopping…" forever (only a reload cleared it).
+const STOP_FALLBACK_MS = 4000;
 
 /** @param {number} seconds @returns {string} */
 function fmt(seconds) {
@@ -43,12 +49,16 @@ function render() {
     chip.append(r.elapsed);
     // A backgrounded worker outlives the hive turn, so it gets its own stop
     // (stop_task → query.stopTask), distinct from the group interrupt below.
-    if (r.background && r.taskId) {
+    // Once stopping, swap the ✕ for a status label so it can't be re-clicked.
+    if (r.stopping) {
+      chip.classList.add("stopping");
+      chip.append(el("span", "running-target", "stopping…"));
+    } else if (r.background && r.taskId) {
       const tid = r.taskId;
       const x = el("button", "chip-stop", "✕");
       x.title = "Stop this background agent";
       x.onclick = () => {
-        send({ type: "stop_task", taskId: tid });
+        requestStopTask(r, tid);
       };
       chip.append(x);
     }
@@ -88,6 +98,19 @@ export function attachTask(id, taskId) {
  * @param {string} id @returns {boolean} */
 export function isBackground(id) {
   return Boolean(running.get(id)?.background);
+}
+
+/** Ask the server to stop a backgrounded worker and mark its chip "stopping…".
+ * The chip is normally cleared by the worker's task_notification, but a worker
+ * that already exited emits none — so self-heal by dropping the chip after a
+ * fallback window. stopAgentByTask is idempotent, so if the real notification
+ * wins the race this timer is a harmless no-op. @param {Running} r @param {string} taskId */
+function requestStopTask(r, taskId) {
+  if (r.stopping) return; // already pending — ignore repeat clicks
+  r.stopping = true;
+  send({ type: "stop_task", taskId });
+  setTimeout(() => stopAgentByTask(taskId), STOP_FALLBACK_MS);
+  render();
 }
 
 /** Remove a chip by tool_use id; returns its label (for a result banner).

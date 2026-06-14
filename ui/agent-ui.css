@@ -1513,6 +1513,11 @@ input.cmd::placeholder {
   white-space: nowrap;
 }
 
+/* A chip whose ✕ was clicked: dimmed while it waits to settle (or self-heals). */
+.running-agent.stopping {
+  opacity: 0.55;
+}
+
 .status-dot {
   width: 7px;
   height: 7px;
