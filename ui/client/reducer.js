@@ -50,11 +50,29 @@ export function reduce(s, msg) {
           contextMax: msg.maxTokens,
         },
       };
+    case "hermes":
+      return foldHermes(s, msg);
     case "event":
       return reduceEvent(s, msg.message);
     default:
       return s;
   }
+}
+
+/** A relayed progress line from the external Hermes researcher (mcp__ui__hermes). Logs
+ * it to the activity stream and, while a run is live (start/progress), shows it in the
+ * thinking indicator; "done" clears the indicator. @param {State} s
+ * @param {Extract<ServerMsg, { type: "hermes" }>} msg @returns {State} */
+function foldHermes(s, msg) {
+  const detail = msg.text.slice(0, 200);
+  return {
+    ...s,
+    thinking:
+      msg.phase === "done"
+        ? { active: false, label: "" }
+        : { active: true, label: `Hermes · ${detail.slice(0, 60)}` },
+    activity: [...s.activity, { kind: "hermes", agent: "hermes", verb: "Hermes", detail }],
+  };
 }
 
 /** A tool was auto-denied (no interactive approver). Always log it to the

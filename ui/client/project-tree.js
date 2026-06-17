@@ -9,9 +9,9 @@ import { paint, agentLabel, agentInitial } from "./agents.js";
 
 const TAB_KEY = "xenodot-side-tab";
 
-/** Every selectable tab. Anything stale (e.g. a removed "sources" tab) coerces
- * back to the default working surface. */
-const TABS = new Set(["tasks", "promote", "assets", "agents", "skills", "tokens"]);
+/** Every selectable tab in the "More" section (Tasks now lives in its own
+ * rail section, not here). A stale/removed value coerces to the default. */
+const TABS = new Set(["promote", "assets", "agents", "skills", "tokens"]);
 /** Tabs that render into the project pane (vs. their own reactive pane). */
 const PROJECT_TABS = new Set(["assets", "agents", "skills", "tokens"]);
 
@@ -20,10 +20,10 @@ let state = null;
 
 let activeTab = (() => {
   try {
-    const saved = localStorage.getItem(TAB_KEY) ?? "tasks";
-    return TABS.has(saved) ? saved : "tasks";
+    const saved = localStorage.getItem(TAB_KEY) ?? "promote";
+    return TABS.has(saved) ? saved : "promote";
   } catch {
-    return "tasks";
+    return "promote";
   }
 })();
 
@@ -171,10 +171,10 @@ async function renderTokens(tree) {
   tree.append(wrap);
 }
 
-/** Show exactly one workbench pane; the other two are dropped from layout.
+/** Show exactly one "More"-section pane; the other is dropped from layout.
  * @param {string} id */
 function showPane(id) {
-  for (const p of ["tasks-pane", "promotions-pane", "project-pane"]) {
+  for (const p of ["promotions-pane", "project-pane"]) {
     const node = $(p);
     if (node) node.hidden = p !== id;
   }
@@ -203,7 +203,7 @@ function renderTab() {
   }
 
   if (!PROJECT_TABS.has(activeTab)) {
-    showPane(activeTab === "promote" ? "promotions-pane" : "tasks-pane");
+    showPane("promotions-pane"); // the only non-project tab is Promote
     return;
   }
 

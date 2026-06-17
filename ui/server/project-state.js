@@ -2,7 +2,13 @@
 // drifts from what's actually on disk.
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import path from "node:path";
-import { PROJECT_DIR, PROJECT_FOUND, ENGINE, FRAMEWORK_PLUGIN_DIR } from "./config.js";
+import {
+  PROJECT_DIR,
+  PROJECT_FOUND,
+  ENGINE,
+  FRAMEWORK_PLUGIN_DIR,
+  hermesPublicConfig,
+} from "./config.js";
 
 /**
  * @param {string} dir
@@ -114,5 +120,7 @@ export function projectState() {
       path.join(FRAMEWORK_PLUGIN_DIR, "skills"),
       path.join(dir, ".claude", "skills"),
     ]),
+    // External Hermes researcher config for the settings panel — key-free (hasKey only).
+    hermes: hermesPublicConfig(),
   };
 }

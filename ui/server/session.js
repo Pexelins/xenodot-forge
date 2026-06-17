@@ -12,6 +12,7 @@ import { makeTaskTool } from "./task-tool.js";
 import { makeAssetTool } from "./asset-tool.js";
 import { makeAskTool } from "./ask-tool.js";
 import { makePromoteTool } from "./promote-tool.js";
+import { makeHermesTool } from "./hermes-tool.js";
 import { readPromotions, decide, markPromoted } from "./promotions-store.js";
 import { promoteOne } from "./promote-run.js";
 import {
@@ -414,6 +415,7 @@ function runSession({
                 makeAssetTool(send),
                 makeAskTool(send),
                 makePromoteTool(send),
+                makeHermesTool(send),
               ],
             }),
           },

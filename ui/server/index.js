@@ -18,6 +18,8 @@ import {
   LOG_DIR,
   ENGINE_LABEL,
   RES_ASSET_MOUNT,
+  saveHermesConfig,
+  hermesPublicConfig,
 } from "./config.js";
 import { projectState } from "./project-state.js";
 import { recentSessions, deleteSession } from "./transcripts.js";
@@ -110,6 +112,35 @@ function handleLevelPost(req, res) {
   });
 }
 
+/** Persist the Hermes settings block the UI panel submitted (enable, apiUrl, model, and
+ * optionally a new apiKey) into .xenodot.json, then respond with the key-free public view
+ * so the panel re-renders from truth. Takes effect immediately — getHermesConfig re-reads
+ * the file per call, so no server restart is needed.
+ * @param {import("node:http").IncomingMessage} req @param {import("node:http").ServerResponse} res */
+function handleSettingsPost(req, res) {
+  /** @type {Buffer[]} */
+  const chunks = [];
+  req.on("data", (/** @type {Buffer} */ c) => {
+    chunks.push(c);
+  });
+  req.on("end", () => {
+    /** @type {{ hermes?: import("../lib/types.js").HermesPublicConfig } | { error: string }} */
+    let result;
+    try {
+      const body =
+        /** @type {{ hermes?: { enabled?: boolean, apiUrl?: string, apiKey?: string, model?: string } }} */ (
+          parseJSON(Buffer.concat(chunks).toString("utf8"))
+        );
+      const saved = saveHermesConfig(body.hermes ?? {});
+      result = "error" in saved ? saved : { hermes: hermesPublicConfig() };
+    } catch {
+      result = { error: "bad request" };
+    }
+    res.writeHead("error" in result ? 400 : 200, { "content-type": "application/json" });
+    res.end(JSON.stringify(result));
+  });
+}
+
 mkdirSync(LOG_DIR, { recursive: true });
 
 // Materialize the framework's per-game files into the game (gitignored): tools copied,
@@ -158,6 +189,10 @@ const server = http.createServer((req, res) => {
   }
   if (req.method === "POST" && url === "/api/level") {
     handleLevelPost(req, res);
+    return;
+  }
+  if (req.method === "POST" && url === "/api/settings") {
+    handleSettingsPost(req, res);
     return;
   }
   serveStatic(req, res);

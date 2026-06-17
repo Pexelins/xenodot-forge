@@ -1,7 +1,7 @@
 // Server configuration — argv parsing, paths and policy constants, resolved
 // once at startup. Importing this module also validates --allow and exits on a
 // bad value (a load-time side effect, by design).
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,12 +24,15 @@ export const CONFIG_FILE = path.join(FRAMEWORK_DIR, ".xenodot.json");
 const args = process.argv.slice(2);
 
 /** @typedef {{ name?: string, projectFile?: string, bin?: string }} EngineConfig */
+/** Persisted Hermes block (see getHermesConfig). The apiKey lives only here (the
+ * file is gitignored) or in env — it is never returned to the browser.
+ * @typedef {{ enabled?: boolean, apiUrl?: string, apiKey?: string, model?: string }} HermesConfig */
 
 /** Parsed `.xenodot.json` (written by `npm run setup`), or `{}` if absent/invalid.
  * Read once: it carries both the saved project path and the engine block. */
 const SAVED = (() => {
   try {
-    return /** @type {{ projectDir?: string, engine?: EngineConfig, assetLibrary?: string }} */ (
+    return /** @type {{ projectDir?: string, engine?: EngineConfig, assetLibrary?: string, hermes?: HermesConfig }} */ (
       parseJSON(readFileSync(CONFIG_FILE, "utf8"))
     );
   } catch {
@@ -152,6 +155,87 @@ export const ASK_TOOL = "mcp__ui__ask";
 // record on the promotions board (a UI-control surface, no real side effect — the
 // move happens later via `npm run promote`), so it bypasses the permission policy.
 export const PROMOTE_TOOL = "mcp__ui__promote";
+
+// In-process MCP tool the HIVE (orchestrator main loop) calls to delegate the heavy
+// investigation half of research to an external Hermes Agent. Unlike the UI-control
+// tools above it is a REAL side effect (a billable network call), so it deliberately
+// has NO auto-allow branch in canUseTool — every dispatch hits the per-call
+// permission gate (allow/deny in the web UI). Granted to the Hive only: no sub-agent
+// frontmatter lists it, so only the foreground Hive can call it.
+export const HERMES_TOOL = "mcp__ui__hermes";
+
+/** Curated agentic model ids for the settings dropdown (from Hermes' model catalog),
+ * the first being the recommended default. The user can also enter a custom id. NOTE:
+ * Hermes' API `model` field is cosmetic on a single-profile server (the real model is
+ * set in its own `~/.hermes/config.yaml`); we pass it through regardless. */
+export const HERMES_DEFAULT_MODEL = "anthropic/claude-opus-4.7";
+export const HERMES_MODELS = [HERMES_DEFAULT_MODEL, "moonshotai/kimi-k2.6", "openai/gpt-5.4"];
+
+/** Effective Hermes config, resolved fresh on every call (env overrides → `.xenodot.json`
+ * `hermes` block → disabled), so switching it on from the CLI or the UI takes effect
+ * WITHOUT a server restart. The apiKey is read here but must never be sent to the browser
+ * (see hermesPublicConfig).
+ * @returns {{ enabled: boolean, apiUrl: string | null, apiKey: string | null, model: string }} */
+export function getHermesConfig() {
+  /** @type {HermesConfig} */
+  let saved = {};
+  try {
+    saved =
+      /** @type {{ hermes?: HermesConfig }} */ (parseJSON(readFileSync(CONFIG_FILE, "utf8")))
+        .hermes ?? {};
+  } catch {
+    /* absent/invalid — treat as no saved block */
+  }
+  const env = process.env;
+  const enabled =
+    env.HERMES_ENABLED != null ? env.HERMES_ENABLED === "true" : Boolean(saved.enabled);
+  return {
+    enabled,
+    apiUrl: env.HERMES_API_URL ?? saved.apiUrl ?? null,
+    apiKey: env.HERMES_API_KEY ?? saved.apiKey ?? null,
+    model: env.HERMES_MODEL ?? saved.model ?? HERMES_DEFAULT_MODEL,
+  };
+}
+
+/** Browser-safe view of the Hermes config for /api/state: the secret key is replaced
+ * by a boolean `hasKey`. @returns {{ enabled: boolean, apiUrl: string | null, model: string, hasKey: boolean, models: string[] }} */
+export function hermesPublicConfig() {
+  const c = getHermesConfig();
+  return {
+    enabled: c.enabled,
+    apiUrl: c.apiUrl,
+    model: c.model,
+    hasKey: Boolean(c.apiKey),
+    models: HERMES_MODELS,
+  };
+}
+
+/** Merge a partial Hermes block into `.xenodot.json`, preserving every other field
+ * (projectDir, engine, …). An empty-string apiKey is dropped (don't overwrite a saved
+ * key with blank when the UI didn't resend it); a non-empty one replaces it.
+ * @param {HermesConfig} patch @returns {{ ok: true } | { error: string }} */
+export function saveHermesConfig(patch) {
+  /** @type {Record<string, unknown>} */
+  let saved = {};
+  try {
+    saved = /** @type {Record<string, unknown>} */ (parseJSON(readFileSync(CONFIG_FILE, "utf8")));
+  } catch {
+    /* absent/invalid — start fresh */
+  }
+  const prev = /** @type {HermesConfig} */ (saved.hermes ?? {});
+  /** @type {HermesConfig} */
+  const next = { ...prev };
+  if (patch.enabled != null) next.enabled = patch.enabled;
+  if (patch.apiUrl != null) next.apiUrl = patch.apiUrl;
+  if (patch.model != null) next.model = patch.model;
+  if (patch.apiKey) next.apiKey = patch.apiKey; // blank/undefined → keep existing
+  try {
+    writeFileSync(CONFIG_FILE, JSON.stringify({ ...saved, hermes: next }, null, 2) + "\n");
+    return { ok: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "write failed" };
+  }
+}
 
 // Bare tool names auto-allowed (no permission prompt) for the whole session — the
 // read/research/exec toolset background sub-agents need. This is the ONE lever that

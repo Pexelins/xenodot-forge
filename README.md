@@ -18,9 +18,9 @@ The tools are here. The shape of the framework is yours to decide.
 
 ### Roadmap:
 
-✅ [Foundation POC](https://github.com/arthur0n/xenodot-forge/blob/main/docs/roadmap/first_game.md)) is complete and retired.
+✅ [Foundation POC](https://github.com/arthur0n/xenodot-forge/blob/main/docs/roadmap/first_game.md) is complete and retired.
 
-✅ [FPS POC](https://github.com/arthur0n/xenodot-forge/blob/main/docs/roadmap/fps_poc.md), Part 1 completed.
+✅ [FPS POC](https://github.com/arthur0n/xenodot-forge/blob/main/docs/roadmap/fps_poc.md) Part 1 completed.
 
 ## Why this exists
 
@@ -78,6 +78,26 @@ local in `<game>/.claude/`, and you **promote** the ones worth sharing into the 
   4.x APIs; verified against 4.6). The forks share Godot's project format, GDScript
   and CLI, so they run the same pipeline unchanged, see [docs/engines.md](docs/engines.md).
 - Node.js 18+ (only for the web UI)
+
+## Cost & subscriptions
+
+Two separate bills, by design. The **Hive** (orchestrator + sub-agents) runs on your local
+Claude Code login. **Hermes** (optional researcher) is a separate runtime with its own provider.
+
+| Rail                  | What runs                                                                             | How you pay                                                                                                              | Switch it                                                         |
+| --------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| **Hive** (required)   | Claude Code via the Agent SDK, pinned to Opus 4.8                                     | Claude **subscription** (Pro ~$20 / Max ~$100–200 mo, usage-capped) **or** Anthropic **API key** (~$5/$25 per 1M in/out) | subscription: `claude` `/login`; API key: set `ANTHROPIC_API_KEY` |
+| **Hermes** (optional) | External [Hermes Agent](https://hermes-agent.nousresearch.com/), model of your choice | Provider it points at — **OpenRouter** / Nous Portal / your own key, metered per token (~$0.25–$2.50 per deep run)       | ⚙ Settings in the UI, or `npm run hermes`                         |
+
+- A Antropic **subscription does not cover Hermes** — Hermes always needs its own API key.
+- Closest to "one bill": point Hermes's `~/.hermes/config.yaml` at your own Anthropic key so both rails hit the same account (still two auth contexts).
+- Hermes is **off by default**; the framework runs fully on the Hive alone.
+- You **can** point the Hive at the Anthropic API (or a compatible endpoint) via env vars instead of the subscription login. I don't — in my experience a subscription beats an API key for heavy use; API keys are better for ad-hoc requests.
+
+> **Disclaimer (maintainer's setup):** I run on a paid on AI subscriptions(all providers) (~$150/mo, as company
+> expense) because I work across several projects, so the flat fee pays off for me. That is **not
+> required** — the framework runs on Pro, or pay-per-token API, or with Hermes off entirely. If you
+> want a cheaper setup, open an issue and I'll help you wire one.
 
 ## Quickstart
 
@@ -218,6 +238,26 @@ npm run setup -- /path/to/your/game
 - **Push-back is the product.** The framework should refuse to silently fill vague briefs with its own assumptions. If the scope isn't clear, it asks.
 - **Verification is mandatory.** Godot exits 0 on script parse errors and silently drops unknown `.tscn` properties. `tools/verify_scene.gd` exists because bugs that should have been caught shipped "verified" without it.
 - **You stay the designer.** The framework keeps the loop fast and honest, it does not replace your judgement on what game to build.
+
+## Not a competitor, a conductor
+
+This framework isn't trying to beat Claude Code, [Hermes](https://hermes-agent.org/), or any model provider. It's built to **use them under the hood, with you still holding the wheel.** The bet isn't "our agent vs theirs", it's "the right tools composed behind one honest, human-gated loop."
+
+- **Bring your own provider.** The framework drives Claude Code through the Agent SDK, which already speaks to more than Anthropic's direct API: **Amazon Bedrock, Google Vertex, Azure Foundry, and enterprise gateways** are first-class backends (`apiProvider` in the SDK; flip the standard `CLAUDE_CODE_USE_BEDROCK` / `CLAUDE_CODE_USE_VERTEX` / gateway env vars and the SDK inherits them). Non-Claude models can be routed through an Anthropic-API-compatible proxy (LiteLLM, claude-code-router). You're tied to an API _shape_, not a vendor.
+- **Other agents as delegated workers, not bosses.** The Hive stays the orchestrator and you keep approving its moves; a persistent agent like Hermes plugs in _underneath_ as a sub-agent the Hive dispatches to (over Hermes's OpenAI-compatible HTTP API), useful for work outside Godot's core: long-running memory, web research, multi-step ops. Anything it produces re-enters the same verification gates before it counts as done. (Running such an agent _on top_ as the conductor is possible too, but only on a leash that checkpoints with you, we compose autonomy, we don't surrender it.)
+- **The one rule that doesn't bend: human in the loop.** Every other piece, provider, model, outer orchestrator, is swappable. The approval gates, the designer interview, and the human-run `promote` are not.
+
+## Honest limitations (and where they're going)
+
+No spin. Where it's weak today, and the intended direction, marked clearly as _not yet shipped_:
+
+- **The learning loop is deliberately manual.** Skills improve only when _you_ run `promote`. That's the point, you stay the gatekeeper, but knowledge accrues slower than auto-capturing agents like Hermes. _Direction: assisted capture that drafts the skill and still waits for your yes._
+- **API-shape lock-in.** Native backends are all Claude-family (Bedrock / Vertex / Foundry / gateway); other models need a translating proxy and lose some tool-use fidelity, since the pipeline is tuned for Claude's tool calls. _Direction: first-class, UI-level provider switching, with the fidelity gap measured honestly instead of hidden._
+- **No Hermes worker bridge yet.** The Hermes-as-sub-agent story above is a designed-for direction, not shipped. The realistic path is a small MCP/tool wrapper around Hermes's OpenAI-compatible HTTP API (Hermes is an MCP _client_, not yet a server), with every dispatch passing the human approval gate and every artifact re-passing `godot-verify` rather than being trusted blind. _Direction: that supervised bridge, plus a single source of truth for skills/memory aligned to the [agentskills.io](https://agentskills.io) standard so two systems don't grow two brains._
+- **No persistent cross-session memory of _you_.** Each run starts fresh against the game repo; it doesn't remember your preferences the way an always-on agent does. _Direction: an optional, human-curated memory layer, off by default._
+- **Verification is Godot-specific and headless-bound.** The gates catch what the engine silently drops, but render checks are shallow and there's no gameplay/behavioral testing yet. _Direction: deeper runtime assertions._
+- **Local, single-user, not always-on.** The web UI is one person at one machine, no multi-channel, no 24/7. That's by design (human in the loop), but a real limit if you wanted hands-off automation, which this deliberately is not for.
+- **It's a POC, and narrow.** Godot-family only; APIs, layouts, and prompts change without notice. _Direction: stabilize the pipeline contract before chasing breadth._
 
 ## Releases & versioning
 

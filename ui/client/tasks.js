@@ -219,10 +219,9 @@ function render(tasks) {
   }
   const visible = tasks.filter((t) => !dismissed.has(t.id));
   reconcile($("tasks-list"), visible, { key: (t) => t.id, create: createRow, update: updateRow });
-  // Live (not-done) count rides on the Tasks tab; empty placeholder shows when
-  // the board has nothing at all.
-  const open = visible.filter((t) => t.status !== "done").length;
-  $("tasks-tabcount").textContent = open ? String(open) : "";
+  // Live (not-done) count rides on the Tasks section badge; empty placeholder
+  // shows when the board has nothing at all.
+  $("tasks-badge").textContent = String(visible.filter((t) => t.status !== "done").length);
   $("tasks-empty").style.display = visible.length ? "none" : "";
   for (const t of visible) if (t.status === "done") armRetire(t.id);
 }

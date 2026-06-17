@@ -8,6 +8,7 @@
 /** @typedef {{ path: string, title: string }} DesignDoc */
 /** @typedef {{ path: string, title: string, verdict: string | null }} LibraryEntry */
 /** @typedef {{ name: string, model: string | null }} AgentEntry */
+/** Browser-safe Hermes config (no API key — `hasKey` only). @typedef {{ enabled: boolean, apiUrl: string | null, model: string, hasKey: boolean, models: string[] }} HermesPublicConfig */
 /**
  * @typedef {object} ProjectState
  * @property {string} name
@@ -19,6 +20,7 @@
  * @property {string[]} scripts
  * @property {AgentEntry[]} agents
  * @property {string[]} skills
+ * @property {HermesPublicConfig} hermes - external Hermes researcher config (key-free)
  */
 
 /** @typedef {{ id: string, title: string, when: string }} RecentSession */
@@ -121,6 +123,7 @@
  *   | { type: "promotions", items: Promotion[] }
  *   | { type: "permission_denied", toolName: string, agent?: string, reason?: string, background?: boolean }
  *   | { type: "context", percentage: number, totalTokens: number, maxTokens: number }
+ *   | { type: "hermes", phase: "start" | "progress" | "done", runId?: string, text: string }
  *   | { type: "idle" }
  * )} ServerMsg */
 

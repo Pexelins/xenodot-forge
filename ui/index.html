@@ -50,6 +50,15 @@
             <span class="mono" id="model-name">connecting…</span>
           </span>
           <button
+            class="icon-btn"
+            id="settings-btn"
+            type="button"
+            title="Settings — external Hermes researcher"
+            aria-label="Open settings"
+          >
+            ⚙
+          </button>
+          <button
             class="rail-toggle"
             id="activity-toggle"
             type="button"
@@ -64,14 +73,12 @@
 
       <div class="app-body">
         <aside class="sidebar">
-          <!-- Session — reference-only status (the values here are "stale" in
-               normal use), so it's pared to a single status line + hairline meter. -->
-          <div class="session-strip" id="session-card">
-            <div class="session-strip-row">
-              <span class="dot idle" id="session-dot"></span>
-              <span class="session-strip-model mono" id="session-model">starting…</span>
-              <span class="session-strip-meta" id="session-meta"></span>
-              <span class="session-strip-actions">
+          <!-- 1 · Session — the live session on top, recent (resumable) sessions
+               trailing under it; capped to ~two rows, scroll reveals the rest. -->
+          <section class="rail-section rail-session">
+            <div class="side-head">
+              <span class="side-label">Session</span>
+              <span class="side-head-actions">
                 <button
                   class="icon-btn"
                   id="compact-session"
@@ -82,32 +89,47 @@
                 <button class="icon-btn" id="new-session">+ new</button>
               </span>
             </div>
-            <div class="ctx-meter" id="ctx-meter" title="Context window used this session">
-              <div class="ctx-bar" id="ctx-bar"></div>
+            <div class="session-scroll">
+              <div class="session-strip" id="session-card">
+                <div class="session-strip-row">
+                  <span class="dot idle" id="session-dot"></span>
+                  <span class="session-strip-model mono" id="session-model">starting…</span>
+                  <span class="session-strip-meta" id="session-meta"></span>
+                </div>
+                <div class="ctx-meter" id="ctx-meter" title="Context window used this session">
+                  <div class="ctx-bar" id="ctx-bar"></div>
+                </div>
+                <div class="session-strip-foot">
+                  <span class="ctx-label" id="ctx-label"></span>
+                  <span
+                    class="plan-label"
+                    id="plan-label"
+                    title="Your claude.ai plan usage (the binding rate-limit window)"
+                  ></span>
+                </div>
+              </div>
+              <div id="recent-sessions"></div>
             </div>
-            <div class="session-strip-foot">
-              <span class="ctx-label" id="ctx-label"></span>
-              <span
-                class="plan-label"
-                id="plan-label"
-                title="Your claude.ai plan usage (the binding rate-limit window)"
-              ></span>
-            </div>
-          </div>
-          <div class="session-recent">
-            <div id="recent-sessions"></div>
-            <button class="expand-toggle" id="sessions-toggle" style="display: none">expand</button>
-          </div>
+          </section>
 
-          <!-- Workbench — the working surfaces, tabbed. Primary: Tasks · Promote ·
-               Design. Secondary (project meta, lower priority): Agents · Skills · Tokens. -->
-          <div class="workbench">
+          <!-- 2 · Tasks — the primary working surface. -->
+          <section class="rail-section rail-tasks">
+            <div class="side-head">
+              <span class="side-label">Tasks</span>
+              <span class="badge" id="tasks-badge">0</span>
+            </div>
+            <div class="rail-body">
+              <div id="tasks-list"></div>
+              <div class="tree-empty" id="tasks-empty">the bench is clear</div>
+            </div>
+          </section>
+
+          <!-- 3 · Everything else — tabbed. Primary: Promote · Design.
+               Secondary (project meta, lower priority): Agents · Skills · Tokens. -->
+          <section class="rail-section rail-more">
             <div class="wb-tabs">
               <div class="wb-tabs-primary" role="tablist">
-                <button class="wb-tab on" data-tab="tasks">
-                  Tasks<span class="wb-count" id="tasks-tabcount"></span>
-                </button>
-                <button class="wb-tab" data-tab="promote">
+                <button class="wb-tab on" data-tab="promote">
                   Promote<span class="wb-count" id="promote-tabcount"></span>
                 </button>
                 <button class="wb-tab" data-tab="assets">
@@ -133,13 +155,8 @@
               </div>
             </div>
 
-            <div class="wb-body">
-              <div class="wb-pane" id="tasks-pane">
-                <div id="tasks-list"></div>
-                <div class="tree-empty" id="tasks-empty">the bench is clear</div>
-              </div>
-
-              <div class="wb-pane" id="promotions-pane" hidden>
+            <div class="rail-body">
+              <div class="wb-pane" id="promotions-pane">
                 <div id="promotions-list"></div>
                 <div class="tree-empty" id="promotions-empty">nothing waiting to promote</div>
               </div>
@@ -149,7 +166,7 @@
                 <div id="project-tree"></div>
               </div>
             </div>
-          </div>
+          </section>
         </aside>
 
         <div class="panel-resizer" id="resize-sidebar" title="Drag to resize"></div>
@@ -354,6 +371,58 @@
         <div class="modal-actions">
           <button class="btn ghost" id="draw-level-close">Close</button>
           <button class="btn primary" id="draw-level-export">Export level</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="settings-modal" style="display: none">
+      <div class="modal">
+        <div class="modal-head">Settings</div>
+        <p class="modal-sub">
+          <strong>Hermes</strong> — an external
+          <a href="https://hermes-agent.nousresearch.com/" target="_blank" rel="noreferrer"
+            >Hermes Agent</a
+          >
+          the <strong>Hive</strong> can use as its main researcher. Only the Hive calls it; every
+          dispatch is gated (allow/deny). Hermes is advisory — it investigates and returns findings;
+          it never writes files or adopts anything. When off, research falls back to the Xenodot
+          researchers.
+        </p>
+        <label class="form-label settings-toggle">
+          <input type="checkbox" id="hermes-enabled" />
+          Enable Hermes
+        </label>
+        <label class="form-label" for="hermes-url">API URL</label>
+        <input
+          class="form-input"
+          id="hermes-url"
+          placeholder="http://localhost:8000  (your Hermes API server)"
+        />
+        <label class="form-label" for="hermes-key">API key</label>
+        <input
+          class="form-input"
+          id="hermes-key"
+          type="password"
+          autocomplete="off"
+          placeholder="leave blank to keep the saved key"
+        />
+        <label class="form-label" for="hermes-model">Model</label>
+        <select class="form-input" id="hermes-model"></select>
+        <input
+          class="form-input"
+          id="hermes-model-custom"
+          placeholder="custom model id, e.g. provider/model-name"
+          style="display: none"
+        />
+        <p class="modal-sub muted">
+          On a single-profile Hermes server the API <code>model</code> field is cosmetic — the real
+          model is set in Hermes' own <code>~/.hermes/config.yaml</code>. We pass your choice through
+          regardless.
+        </p>
+        <div class="modal-error" id="settings-error"></div>
+        <div class="modal-actions">
+          <button class="btn ghost" id="settings-cancel">Cancel</button>
+          <button class="btn primary" id="settings-save">Save</button>
         </div>
       </div>
     </div>

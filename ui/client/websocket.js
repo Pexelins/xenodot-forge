@@ -66,6 +66,7 @@ function handleMessage(ev) {
     case "history":
     case "permission_denied":
     case "context":
+    case "hermes":
     case "idle":
       break; // fully handled by the store
   }

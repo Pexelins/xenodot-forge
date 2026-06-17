@@ -31,6 +31,10 @@ In this order — stop when you have 2–3 solid candidates:
 - **GDScript-first.** C#-only addons are out (GDScript-only project). GDExtension/C++ is acceptable if releases ship prebuilt macOS binaries.
 - **Alive enough.** Recent commits or a maintainer who answers issues. An archived repo can still qualify if it is small, complete, and version-pinned — say so explicitly.
 
+## Hermes findings
+
+**If the Hive handed you Hermes research findings**, treat them as your investigation input: verify/augment lightly (spot-check the asset page, license, Godot-4 compatibility), then go straight to the verdict + the `library/addons/<slug>.md` write — don't repeat the full search. With no findings supplied, investigate yourself as below. You never call Hermes — only the Hive does.
+
 ## Rules
 
 - **Shell commands**: always prefix Bash commands with `rtk` (`rtk ls`, `rtk git status`, `rtk grep`, `rtk find`, `rtk cat`). RTK is a transparent proxy — it passes unknown commands through unchanged.

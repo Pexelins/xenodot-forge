@@ -11,11 +11,12 @@
 
 ## HTTP
 
-| Route               | Returns                                                                                            |
-| ------------------- | -------------------------------------------------------------------------------------------------- |
-| `GET /`             | the UI page                                                                                        |
-| `GET /api/state`    | live project inventory (JSON, scanned on every call — never cached, never stale)                   |
-| `GET /api/sessions` | recent sessions from the NDJSON logs: `[{ id, title, when }]` — `id` is the Claude Code session id |
+| Route                | Returns                                                                                                                                                                                            |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /`              | the UI page                                                                                                                                                                                        |
+| `GET /api/state`     | live project inventory (JSON, scanned on every call — never cached, never stale)                                                                                                                   |
+| `GET /api/sessions`  | recent sessions from the NDJSON logs: `[{ id, title, when }]` — `id` is the Claude Code session id                                                                                                 |
+| `POST /api/settings` | merge a settings block into `.xenodot.json` (currently `{ hermes }`); replies with the key-free `{ hermes }` public view. Takes effect immediately — config is re-read per Hermes call, no restart |
 
 `/api/state` shape:
 
@@ -34,7 +35,15 @@
   "scenes": ["scenes/main.tscn"],
   "scripts": ["tools/verify_scene.gd"],
   "agents": [{ "name": "godot-dev", "model": "sonnet" }], // model from agent frontmatter
-  "skills": ["godot-verify", "..."]
+  "skills": ["godot-verify", "..."],
+  // external Hermes researcher config — key-free (hasKey only); never returns the API key
+  "hermes": {
+    "enabled": false,
+    "apiUrl": "http://localhost:8000",
+    "model": "anthropic/claude-opus-4.7",
+    "hasKey": false,
+    "models": ["anthropic/claude-opus-4.7", "moonshotai/kimi-k2.6", "openai/gpt-5.4"]
+  }
 }
 ```
 
@@ -53,6 +62,7 @@
 | `tasks`             | `tasks[]` (each `{ id, title, owner: agent\|user, status: pending\|in_progress\|done, note?, created, kind?: "question", options?, answer? }`)                                                                                                                                                   | the persistent task board; sent at session start and after every mutation. A `kind:"question"` item is an async question filed via `mcp__ui__ask` and renders an inline answer input                   |
 | `permission_denied` | `toolName`, `agent?`, `reason?` (SDK `decision_reason_type`, e.g. `asyncAgent`\|`rule`\|`mode`), `background?`                                                                                                                                                                                   | a tool call was auto-denied with no interactive prompt (e.g. a headless/background sub-agent the approver can't reach). Logged to the activity stream; a `background` denial also raises a chat banner |
 | `context`           | `percentage`, `totalTokens`, `maxTokens`                                                                                                                                                                                                                                                         | live context-window usage, read via `query.getContextUsage()` after each `result`. Drives the session panel meter (green→amber→red) so the user can compact/reset before a long session gets expensive |
+| `hermes`            | `phase`: `start` \| `progress` \| `done`, `runId?`, `text`                                                                                                                                                                                                                                       | relayed progress from an external Hermes researcher run (`mcp__ui__hermes`, Hive-only). Folded into the activity log; `start`/`progress` also drive the thinking indicator, `done` clears it           |
 | `idle`              | —                                                                                                                                                                                                                                                                                                | the SDK stream ended (normal, error, or early end) — clears `busy`, the thinking indicator and the whole running strip. The backstop for a turn/session that ended without a `result` event            |
 
 ### Browser → server

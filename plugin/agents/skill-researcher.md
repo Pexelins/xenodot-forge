@@ -22,6 +22,8 @@ The canonical registry of external skill collections is **`library/sources/skill
 
 Never install or copy a collection wholesale. Never edit files inside a cache.
 
+**If the Hive handed you Hermes research findings**, treat them as your investigation input: verify/augment lightly (spot-check a source, a license, a claim), then go straight to the verdict + the skill authoring — don't repeat the full search. With no findings supplied, investigate yourself as below. You never call Hermes — only the Hive does.
+
 ## Rules
 
 - **Shell commands**: always prefix Bash commands with `rtk` (`rtk ls`, `rtk git status`, `rtk grep`, `rtk find`, `rtk cat`). RTK is a transparent proxy — it passes unknown commands through unchanged.

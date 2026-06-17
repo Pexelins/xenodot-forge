@@ -16,6 +16,7 @@ import { initComposer } from "./composer.js";
 import { initTranscript } from "./transcript.js";
 import { initGetAssets } from "./get-assets.js";
 import { initDrawLevel } from "./draw-level.js";
+import { initSettings } from "./settings.js";
 import { send } from "./websocket.js";
 import { $, $input } from "./dom.js";
 
@@ -36,6 +37,7 @@ initProjectTabs();
 initGetAssets();
 initDrawLevel();
 initTranscript();
+initSettings();
 
 $input("mode-select").onchange = () => {
   send({ type: "policy", value: $input("mode-select").value });

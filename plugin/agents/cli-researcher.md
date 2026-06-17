@@ -27,6 +27,8 @@ If a stateless CLI can cover the need at all, it wins.
 
 ## Where to look
 
+**If the Hive handed you Hermes research findings**, treat them as your investigation input: verify/augment lightly (spot-check a license, a claim, a repo), then go straight to the verdict + the `library/tools/<slug>.md` write — don't repeat the full scout. With no findings supplied, investigate yourself as below (you never call Hermes — only the Hive does).
+
 In this order — stop when you can write the definition:
 
 1. **Do we already have it?** Read CLAUDE.md ("## Skills", "## Project conventions"), `tools/CAPABILITIES.md`, glob `tools/` and `library/tools/`. If an existing tool or skill covers the gap, say so and stop — that is a successful result, not a failure. A previous verdict can be revisited only if the gap explains what changed.

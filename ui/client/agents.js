@@ -34,6 +34,7 @@ const ROLE_COLOR = {
   "godot-refactor": "oklch(0.78 0.1 210)", // cyan — inspection steel
   "addon-researcher": "oklch(0.76 0.13 150)", // verdigris — the library
   "transcript-researcher": "oklch(0.74 0.15 345)", // magenta — raw signal
+  hermes: "oklch(0.8 0.15 125)", // lime — the external Hermes researcher (not a Xenodot)
 };
 
 // Display-name (brand) map: identifier -> what the user sees. Brand first
@@ -50,6 +51,7 @@ const DISPLAY = {
   "godot-refactor": "Xenodot Refactor",
   "addon-researcher": "Xenodot Researcher",
   "transcript-researcher": "Xenodot Transcript",
+  hermes: "Hermes", // external researcher — deliberately not branded "Xenodot"
 };
 
 /** @param {string} name @returns {string} */

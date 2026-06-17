@@ -6,6 +6,7 @@
   "private": true,
   "scripts": {
     "setup": "node ui/server/setup.js",
+    "hermes": "node ui/server/setup.js",
     "new": "node ui/server/new.js",
     "promote": "node ui/server/promote.js",
     "materialize": "node ui/server/materialize.js",

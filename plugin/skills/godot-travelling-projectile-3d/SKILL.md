@@ -47,7 +47,11 @@ var _travelled: float = 0.0
 
 
 func _ready() -> void:
-	body_entered.connect(_on_body_entered)
+	# body_entered can fire MULTIPLE times in one physics frame before the deferred
+	# queue_free() removes us — CONNECT_ONE_SHOT makes the hit handler run exactly once
+	# per projectile lifetime (a _consumed bool early-return is the equivalent if you
+	# also need area_entered).
+	body_entered.connect(_on_body_entered, CONNECT_ONE_SHOT)
 
 
 func _physics_process(delta: float) -> void:
@@ -61,8 +65,11 @@ func _physics_process(delta: float) -> void:
 
 
 func _on_body_entered(body: Node3D) -> void:
-	# Report the impact (the hit entity's own Health component handles damage —
-	# signals up, no reaching into the target here), then despawn.
+	# Runs exactly once (one-shot). Report the impact (the hit entity's own Health
+	# component handles damage — signals up, no reaching into the target here), then
+	# despawn. Any connect() this triggers downstream (impact SFX, the target's died
+	# signal) must STILL be idempotent — guard with is_connected() — because the SAME
+	# target can be hit by other projectiles before that signal clears.
 	hit.emit(body)
 	queue_free()
 ```
@@ -130,15 +137,17 @@ func _fire() -> void:
 
 ## Error → Fix
 
-| Symptom                                     | Fix                                                                                                                                           |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Projectile sticks to / moves with the firer | Not detached — spawn into `get_tree().current_scene` and set `top_level = true`, then assign `global_transform`                               |
-| Projectile flies sideways / wrong way       | Muzzle `-Z` isn't pointing where you aim — orient the `Marker3D` so local `-Z` is forward; copy the muzzle `global_transform`, not `position` |
-| Firing every frame, no cadence              | Cooldown not gating — `Timer.one_shot = true`, check `is_stopped()` before firing, `start()` after                                            |
-| Node count climbs forever                   | Missing despawn — `queue_free()` past `max_range` and on `body_entered`                                                                       |
-| Projectile passes through targets           | `body_entered` needs the target to be a PhysicsBody3D on the projectile's collision **mask**; for Area-vs-Area use `area_entered` instead     |
-| Projectile hits the firer immediately       | Firer shares the projectile's collision mask — put projectiles on their own layer and exclude the firer's layer from the mask                 |
-| `UNSAFE_CALL_ARGUMENT` / untyped warnings   | Type the instance: `instantiate() as Projectile`; type signal params and exports per `godot-code-rules`                                       |
+| Symptom                                                                                                   | Fix                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Projectile sticks to / moves with the firer                                                               | Not detached — spawn into `get_tree().current_scene` and set `top_level = true`, then assign `global_transform`                                                                                                                                                                                                                                                                                                                               |
+| Projectile flies sideways / wrong way                                                                     | Muzzle `-Z` isn't pointing where you aim — orient the `Marker3D` so local `-Z` is forward; copy the muzzle `global_transform`, not `position`                                                                                                                                                                                                                                                                                                 |
+| Firing every frame, no cadence                                                                            | Cooldown not gating — `Timer.one_shot = true`, check `is_stopped()` before firing, `start()` after                                                                                                                                                                                                                                                                                                                                            |
+| Node count climbs forever                                                                                 | Missing despawn — `queue_free()` past `max_range` and on `body_entered`                                                                                                                                                                                                                                                                                                                                                                       |
+| Projectile passes through targets                                                                         | `body_entered` needs the target to be a PhysicsBody3D on the projectile's collision **mask**; for Area-vs-Area use `area_entered` instead                                                                                                                                                                                                                                                                                                     |
+| Projectile hits the firer immediately                                                                     | Firer shares the projectile's collision mask — put projectiles on their own layer and exclude the firer's layer from the mask                                                                                                                                                                                                                                                                                                                 |
+| `UNSAFE_CALL_ARGUMENT` / untyped warnings                                                                 | Type the instance: `instantiate() as Projectile`; type signal params and exports per `godot-code-rules`                                                                                                                                                                                                                                                                                                                                       |
+| Hit handler runs several times per projectile / `Signal already connected to given callable`              | Area3D `body_entered`/`area_entered` fires multiple times before the deferred `queue_free` frees the node — connect the entered signal with `CONNECT_ONE_SHOT` (or set a `_consumed` flag and early-return) so the hit runs once.                                                                                                                                                                                                             |
+| Bullet hits a multi-hit enemy, the second shot throws "already connected" and the bullet hangs in the air | Connecting to the target's signal (e.g. `died`) per hit is not idempotent. `CONNECT_ONE_SHOT` only auto-disconnects AFTER that signal fires — a target still alive after hit 1 is still connected at hit 2. Guard: `if not target.is_connected("died", _on_target_died): target.died.connect(_on_target_died, CONNECT_ONE_SHOT)`. The thrown error otherwise aborts the despawn (stuck bullet), so the guard is correctness, not log hygiene. |
 
 ---
 
