@@ -18,9 +18,14 @@ import {
   LOG_DIR,
   ENGINE_LABEL,
   RES_ASSET_MOUNT,
+  MCP_CALLBACK_PATH,
   saveHermesConfig,
   hermesPublicConfig,
+  getHermesConfig,
 } from "./config.js";
+import { checkHermes } from "./hermes-check.js";
+import { handleMcpRequest } from "./mcp-callback.js";
+import { maybeStartHermesGateway } from "./hermes-gateway.js";
 import { projectState } from "./project-state.js";
 import { recentSessions, deleteSession } from "./transcripts.js";
 import { writeTranscript } from "./transcript-write.js";
@@ -141,6 +146,78 @@ function handleSettingsPost(req, res) {
   });
 }
 
+/** A trimmed typed value, or the saved fallback when it's blank/missing.
+ * @param {string | undefined} typed @param {string | null} fallback @returns {string | null} */
+function typedOr(typed, fallback) {
+  const t = typed?.trim();
+  return t && t.length > 0 ? t : fallback;
+}
+
+/** Probe the Hermes gateway and respond with the verdict. Tests the URL/key typed in
+ * the panel (so you can check BEFORE saving); a blank field falls back to the saved
+ * config. Hits `GET /v1/models` only — no model run, no billing.
+ * @param {import("node:http").IncomingMessage} req @param {import("node:http").ServerResponse} res */
+function handleHermesCheckPost(req, res) {
+  /** @type {Buffer[]} */
+  const chunks = [];
+  req.on("data", (/** @type {Buffer} */ c) => {
+    chunks.push(c);
+  });
+  req.on("end", () => {
+    let body = /** @type {{ apiUrl?: string, apiKey?: string }} */ ({});
+    try {
+      body = /** @type {{ apiUrl?: string, apiKey?: string }} */ (
+        parseJSON(Buffer.concat(chunks).toString("utf8") || "{}")
+      );
+    } catch {
+      /* empty/invalid body — fall back to saved config */
+    }
+    const saved = getHermesConfig();
+    // A blank typed field (empty string) → fall back to the saved value.
+    const cfg = {
+      apiUrl: typedOr(body.apiUrl, saved.apiUrl),
+      apiKey: typedOr(body.apiKey, saved.apiKey),
+    };
+    checkHermes(cfg)
+      .then((result) => {
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(JSON.stringify(result));
+      })
+      .catch((e) => {
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(
+          JSON.stringify({
+            ok: false,
+            reachable: false,
+            authOk: false,
+            error: e instanceof Error ? e.message : String(e),
+          }),
+        );
+      });
+  });
+}
+
+/** Route the Hermes → Xenodot MCP callback endpoint: buffer the JSON body, then hand it to the
+ * stateless MCP transport (which writes the JSON-RPC response itself).
+ * @param {import("node:http").IncomingMessage} req @param {import("node:http").ServerResponse} res */
+function handleMcpRoute(req, res) {
+  /** @type {Buffer[]} */
+  const chunks = [];
+  req.on("data", (/** @type {Buffer} */ c) => {
+    chunks.push(c);
+  });
+  req.on("end", () => {
+    const raw = Buffer.concat(chunks).toString("utf8");
+    let body;
+    try {
+      body = raw ? parseJSON(raw) : undefined;
+    } catch {
+      body = undefined;
+    }
+    void handleMcpRequest(req, res, body);
+  });
+}
+
 mkdirSync(LOG_DIR, { recursive: true });
 
 // Materialize the framework's per-game files into the game (gitignored): tools copied,
@@ -164,8 +241,24 @@ const GET_ROUTES = {
   "/api/usage": computeUsage,
 };
 
+/** POST endpoints: url → handler. Keeps the request dispatcher under the complexity
+ * cap by replacing N if-branches with a single lookup (mirrors GET_ROUTES).
+ * @type {Record<string, (req: import("node:http").IncomingMessage, res: import("node:http").ServerResponse) => void>} */
+const POST_ROUTES = {
+  "/api/transcript": handleTranscriptPost,
+  "/api/asset": handleAssetPost,
+  "/api/level": handleLevelPost,
+  "/api/settings": handleSettingsPost,
+  "/api/hermes/check": handleHermesCheckPost,
+};
+
 const server = http.createServer((req, res) => {
   const url = req.url ?? "";
+  // The Hermes → Xenodot MCP callback endpoint (its own JSON-RPC protocol, all methods).
+  if (url === MCP_CALLBACK_PATH || url.startsWith(`${MCP_CALLBACK_PATH}/`)) {
+    handleMcpRoute(req, res);
+    return;
+  }
   const getRoute = GET_ROUTES[url];
   if (getRoute) {
     res.writeHead(200, { "content-type": "application/json" });
@@ -179,20 +272,9 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ deleted: ok }));
     return;
   }
-  if (req.method === "POST" && url === "/api/transcript") {
-    handleTranscriptPost(req, res);
-    return;
-  }
-  if (req.method === "POST" && url === "/api/asset") {
-    handleAssetPost(req, res);
-    return;
-  }
-  if (req.method === "POST" && url === "/api/level") {
-    handleLevelPost(req, res);
-    return;
-  }
-  if (req.method === "POST" && url === "/api/settings") {
-    handleSettingsPost(req, res);
+  const postRoute = POST_ROUTES[url];
+  if (req.method === "POST" && postRoute) {
+    postRoute(req, res);
     return;
   }
   serveStatic(req, res);
@@ -203,6 +285,9 @@ wss.on("connection", handleConnection);
 
 server.listen(PORT, () => {
   console.log(`UI on http://localhost:${PORT} — project: ${PROJECT_DIR}`);
+  // Bring up the Hermes gateway too when Hermes is on (opt-in, skipped if already up).
+  // Non-blocking and non-fatal: the UI is fully usable whether or not this succeeds.
+  void maybeStartHermesGateway();
   if (!PROJECT_FOUND) {
     console.warn(
       [

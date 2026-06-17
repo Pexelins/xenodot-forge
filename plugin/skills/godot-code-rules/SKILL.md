@@ -9,17 +9,19 @@ GDScript strict mode = TypeScript strict, enforced by: `project.godot [debug]` w
 
 ## The contract
 
-| Strict TS / ESLint           | Rule                                                                                                                                            | Enforced by                          |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
-| `no-explicit-any`            | No untyped declarations. Every `var`, param, return typed. `Variant` only at `# SEAM:`                                                          | `untyped_declaration=2`              |
-| type inference               | `:=` encouraged when RHS makes type obvious (`var dir := Vector2.ZERO`)                                                                         | `inferred_declaration=0`, deliberate |
-| explicit return types        | `-> Type` on **every** func, including `-> void`                                                                                                | `untyped_declaration=2`              |
-| `no-unsafe-*`                | No property/method access, cast, or call argument the analyzer can't prove. Fix with typed refs or SEAM                                         | `unsafe_*=2`                         |
-| `strict-boolean-expressions` | Truthiness ONLY for Object null checks (`if node:`). Never on String/int/float/Array/Dict/Vector — use `.is_empty()`, `!= 0`, `!= Vector3.ZERO` | **agent only**                       |
-| `no-unused-vars` + `^_`      | Unused locals = errors; unused params get `_` prefix (`_delta`)                                                                                 | `unused_variable=2`                  |
-| `max-lines`                  | File ≤500 lines, line ≤100 chars, params ≤8, returns ≤6, public methods ≤20                                                                     | gdlint                               |
-| `max-lines-per-function`     | Func ≤~100 effective lines, nesting ≤6                                                                                                          | **agent only**                       |
-| `no-console`                 | `print()` only for deliberate player/dev-facing output; problems use `push_warning()`/`push_error()`                                            | **agent only**                       |
+| Strict TS / ESLint           | Rule                                                                                                                                                                                     | Enforced by                          |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| `no-explicit-any`            | No untyped declarations. Every `var`, param, return typed. `Variant` only at `# SEAM:`                                                                                                   | `untyped_declaration=2`              |
+| type inference               | `:=` encouraged when RHS makes type obvious (`var dir := Vector2.ZERO`)                                                                                                                  | `inferred_declaration=0`, deliberate |
+| explicit return types        | `-> Type` on **every** func, including `-> void`                                                                                                                                         | `untyped_declaration=2`              |
+| `no-unsafe-*`                | No property/method access, cast, or call argument the analyzer can't prove. Fix with typed refs or SEAM                                                                                  | `unsafe_*=2`                         |
+| `strict-boolean-expressions` | Truthiness ONLY for Object null checks (`if node:`). Never on String/int/float/Array/Dict/Vector — use `.is_empty()`, `!= 0`, `!= Vector3.ZERO`                                          | **agent only**                       |
+| `no-unused-vars` + `^_`      | Unused locals = errors; unused params get `_` prefix (`_delta`)                                                                                                                          | `unused_variable=2`                  |
+| `max-lines`                  | File ≤500 lines, line ≤100 chars, params ≤8, returns ≤6, public methods ≤20                                                                                                              | gdlint                               |
+| `max-lines-per-function`     | Func ≤~100 effective lines, nesting ≤6                                                                                                                                                   | **agent only**                       |
+| **soft size trigger**        | File ≥300 lines → STOP: split-or-justify (one responsibility per script). A design checkpoint, NOT a gate failure — the 500 cap rarely fires on real god-scripts, which bloat at 200–300 | **agent only**                       |
+| `no-duplicate` (DRY)         | 3rd near-identical block (node construction, tween/flash, detached-audio, group lookup) → extract a static util to `tools/lib/` before adding the 3rd                                    | **agent only**                       |
+| `no-console`                 | `print()` only for deliberate player/dev-facing output; problems use `push_warning()`/`push_error()`                                                                                     | **agent only**                       |
 
 ## File anatomy
 
@@ -70,6 +72,20 @@ Block form `@warning_ignore_start`/`@warning_ignore_restore` allowed only in `to
 ## Boundary with godot-composition
 
 This skill = **mechanics** (typing, sizes, headers, naming, gate). godot-composition = **structure** (when to extract components, signals up/calls down). Load both when restructuring.
+
+## In-editor linting (gdstyle) — advisory, NOT the gate
+
+`gdstyle` (config: `gdstyle.toml` at project root; install: `tools/install_gdstyle.sh`) is the
+in-editor GDScript linter: live, fixable diagnostics in Godot's bottom panel. It surfaces
+signals gdlint can't — `quality/max-class-variables` (a god-class proxy), perf hints
+(`allocation-in-loop`, `process-get-node`), and complexity caps. Works on Godot/Redot 4.6;
+CLI-only on Blazium.
+
+It is **advisory only**: in v0.1.7 a rule set to `"error"` still reports as "warning" and
+`gdstyle check` exits 0, so it never fails a build — and a couple of rules are off because they
+false-positive or duplicate gdlint. Treat `gdstyle.toml` as on/off toggles + caps; the blocking
+gate below is what catches regressions. Full rationale + the promote-to-gate trigger:
+`library/tools/gdscript-linter.md`.
 
 ## The gate — tools/validate.sh
 

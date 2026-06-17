@@ -13,7 +13,7 @@ preserve compatibility:
 
 - Same project file — `project.godot`.
 - Same scene/resource formats — `.tscn`, `.tres`.
-- Same scripting — GDScript. `gdformat` / `gdlint` (gdtoolkit) are engine-independent.
+- Same scripting — GDScript. `gdformat` / `gdlint` (gdtoolkit) and the `gdstyle` CLI linter are engine-independent.
 - Same headless CLI — `--headless --path --import --check-only --script --quit-after`.
 - Blazium keeps GDExtension and Godot-4.3 project compatibility; Redot tracks
   upstream Godot/GDScript.
@@ -86,6 +86,11 @@ macOS path didn't exist.
   release. If a skill uses a brand-new Godot 4.x API, confirm the fork shipped it.
 - **GDExtension.** Native extensions are Blazium-compatible; rebuild per engine if
   you ship any (none in the POC).
+- **In-editor linting (gdstyle).** The gdstyle CLI parses GDScript text, so it — and the
+  blocking gdformat + gdlint gate — runs on all three forks. The gdstyle _editor panel_ is a
+  GDExtension pinned to the Godot 4.6 ABI: it loads in Godot 4.6 and Redot 4.6; on Blazium
+  (Godot-4.3-based) only the CLI backend runs. Baseline = CLI everywhere; the editor panel is a
+  4.6 enhancement. See `library/tools/gdscript-linter.md`.
 
 ## Future — non-fork engines
 

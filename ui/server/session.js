@@ -415,7 +415,7 @@ function runSession({
                 makeAssetTool(send),
                 makeAskTool(send),
                 makePromoteTool(send),
-                makeHermesTool(send),
+                makeHermesTool(send, inbox.push),
               ],
             }),
           },

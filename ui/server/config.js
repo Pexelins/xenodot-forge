@@ -26,7 +26,9 @@ const args = process.argv.slice(2);
 /** @typedef {{ name?: string, projectFile?: string, bin?: string }} EngineConfig */
 /** Persisted Hermes block (see getHermesConfig). The apiKey lives only here (the
  * file is gitignored) or in env — it is never returned to the browser.
- * @typedef {{ enabled?: boolean, apiUrl?: string, apiKey?: string, model?: string }} HermesConfig */
+ * `mcpKey` is the shared secret Hermes presents when it calls BACK into our MCP callback
+ * server (the reverse direction of apiKey); like apiKey it's local-only, never sent to the browser.
+ * @typedef {{ enabled?: boolean, apiUrl?: string, apiKey?: string, model?: string, mcpKey?: string }} HermesConfig */
 
 /** Parsed `.xenodot.json` (written by `npm run setup`), or `{}` if absent/invalid.
  * Read once: it carries both the saved project path and the engine block. */
@@ -164,18 +166,30 @@ export const PROMOTE_TOOL = "mcp__ui__promote";
 // frontmatter lists it, so only the foreground Hive can call it.
 export const HERMES_TOOL = "mcp__ui__hermes";
 
-/** Curated agentic model ids for the settings dropdown (from Hermes' model catalog),
- * the first being the recommended default. The user can also enter a custom id. NOTE:
- * Hermes' API `model` field is cosmetic on a single-profile server (the real model is
- * set in its own `~/.hermes/config.yaml`); we pass it through regardless. */
-export const HERMES_DEFAULT_MODEL = "anthropic/claude-opus-4.7";
-export const HERMES_MODELS = [HERMES_DEFAULT_MODEL, "moonshotai/kimi-k2.6", "openai/gpt-5.4"];
+// The Hive-side MCP server that external Hermes runs call BACK into (the fire-and-forget
+// reporting loop): post_update streams progress to the feed, deliver_findings hands the result
+// to the Hive. Mounted on THIS UI server at MCP_CALLBACK_PATH; Hermes is pointed at the URL via
+// `mcp_servers.xenodot` in ~/.hermes/config.yaml (written by `npm run hermes:setup`).
+export const MCP_CALLBACK_PATH = "/mcp";
+export const MCP_CALLBACK_URL = `http://localhost:${PORT}${MCP_CALLBACK_PATH}`;
+
+/** Nous Hermes model ids for the settings dropdown; the user can also enter a custom id.
+ * NOTE: this is a LABEL only — our `runs` call doesn't send a model, and the effective
+ * model is chosen inside Hermes itself (`hermes setup` → `~/.hermes/config.yaml`). Nous
+ * also recommends an agentic model over the Hermes-4 family to *drive* the agent, so treat
+ * these as a record of which Hermes model you pointed Hermes at, not a control. */
+export const HERMES_DEFAULT_MODEL = "nousresearch/hermes-4-70b";
+export const HERMES_MODELS = [
+  "nousresearch/hermes-4-405b",
+  HERMES_DEFAULT_MODEL,
+  "nousresearch/hermes-4.3-36b",
+];
 
 /** Effective Hermes config, resolved fresh on every call (env overrides → `.xenodot.json`
  * `hermes` block → disabled), so switching it on from the CLI or the UI takes effect
  * WITHOUT a server restart. The apiKey is read here but must never be sent to the browser
  * (see hermesPublicConfig).
- * @returns {{ enabled: boolean, apiUrl: string | null, apiKey: string | null, model: string }} */
+ * @returns {{ enabled: boolean, apiUrl: string | null, apiKey: string | null, model: string, mcpKey: string | null }} */
 export function getHermesConfig() {
   /** @type {HermesConfig} */
   let saved = {};
@@ -194,6 +208,7 @@ export function getHermesConfig() {
     apiUrl: env.HERMES_API_URL ?? saved.apiUrl ?? null,
     apiKey: env.HERMES_API_KEY ?? saved.apiKey ?? null,
     model: env.HERMES_MODEL ?? saved.model ?? HERMES_DEFAULT_MODEL,
+    mcpKey: env.XENODOT_MCP_KEY ?? saved.mcpKey ?? null,
   };
 }
 
@@ -229,6 +244,7 @@ export function saveHermesConfig(patch) {
   if (patch.apiUrl != null) next.apiUrl = patch.apiUrl;
   if (patch.model != null) next.model = patch.model;
   if (patch.apiKey) next.apiKey = patch.apiKey; // blank/undefined → keep existing
+  if (patch.mcpKey) next.mcpKey = patch.mcpKey; // blank/undefined → keep existing
   try {
     writeFileSync(CONFIG_FILE, JSON.stringify({ ...saved, hermes: next }, null, 2) + "\n");
     return { ok: true };

@@ -9,6 +9,7 @@
 /** @typedef {{ path: string, title: string, verdict: string | null }} LibraryEntry */
 /** @typedef {{ name: string, model: string | null }} AgentEntry */
 /** Browser-safe Hermes config (no API key — `hasKey` only). @typedef {{ enabled: boolean, apiUrl: string | null, model: string, hasKey: boolean, models: string[] }} HermesPublicConfig */
+/** Verdict from probing a Hermes gateway (`POST /api/hermes/check`). @typedef {{ ok: boolean, reachable: boolean, authOk: boolean, status?: number, models?: string[], tools?: string[], error?: string }} HermesCheck */
 /**
  * @typedef {object} ProjectState
  * @property {string} name
@@ -123,12 +124,13 @@
  *   | { type: "promotions", items: Promotion[] }
  *   | { type: "permission_denied", toolName: string, agent?: string, reason?: string, background?: boolean }
  *   | { type: "context", percentage: number, totalTokens: number, maxTokens: number }
- *   | { type: "hermes", phase: "start" | "progress" | "done", runId?: string, text: string }
+ *   | { type: "hermes", phase: "start" | "progress" | "done", runId?: string, text: string, persona?: string }
  *   | { type: "idle" }
  * )} ServerMsg */
 
-/** A row in the activity log.
- * @typedef {{ kind: string, agent: string, child?: string, verb?: string, text?: string, detail?: string }} LogEntry */
+/** A row in the activity log. `color` (optional) is an inline pill color — used by Hermes
+ * persona rows to tint `--hermes-pill` per persona without a CSS class each.
+ * @typedef {{ kind: string, agent: string, child?: string, verb?: string, text?: string, detail?: string, color?: string }} LogEntry */
 
 // ---------- Server-internal plumbing ----------
 /** A reply from the browser to a paused interaction (ask / form / permission).

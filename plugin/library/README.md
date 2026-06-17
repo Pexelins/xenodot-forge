@@ -6,15 +6,16 @@ Nothing here loads into an agent's context automatically. These are durable **re
 
 Every framework artifact is one of four roles. The role decides the home; each home carries its own index, so the next agent can find it without re-researching.
 
-| The thing is…                                           | Role        | Home                           | Index (where the next agent looks)  |
-| ------------------------------------------------------- | ----------- | ------------------------------ | ----------------------------------- |
-| knowledge an agent **loads to learn how**               | skill       | `.claude/skills/godot-<name>/` | the `## Skills` list in `CLAUDE.md` |
-| code an agent **runs**                                  | tool        | `tools/<name>`                 | `tools/CAPABILITIES.md`             |
-| a **verdict / definition kept** so we don't re-research | record      | `library/<kind>/<slug>.md`     | the folder (+ the UI sidebar)       |
-| **where to fetch** external raw material                | source list | `library/sources/<thing>.md`   | the file itself                     |
-| always-relevant **routing / convention**                | —           | `CLAUDE.md` (one line)         | —                                   |
+| The thing is…                                           | Role        | Home                           | Index (where the next agent looks)        |
+| ------------------------------------------------------- | ----------- | ------------------------------ | ----------------------------------------- |
+| knowledge an agent **loads to learn how**               | skill       | `.claude/skills/godot-<name>/` | the `## Skills` list in `CLAUDE.md`       |
+| code an agent **runs**                                  | tool        | `tools/<name>`                 | `tools/CAPABILITIES.md`                   |
+| reusable **runtime code** the game preloads             | stdlib      | `tools/lib/<name>.gd`          | `tools/CAPABILITIES.md` (Runtime library) |
+| a **verdict / definition kept** so we don't re-research | record      | `library/<kind>/<slug>.md`     | the folder (+ the UI sidebar)             |
+| **where to fetch** external raw material                | source list | `library/sources/<thing>.md`   | the file itself                           |
+| always-relevant **routing / convention**                | —           | `CLAUDE.md` (one line)         | —                                         |
 
-Decide by what the thing _does_: **run it → `tools/`; load it to learn → `.claude/skills/`; remember a decision → `library/<kind>/`; a fetch-list → `library/sources/`; always-on → `CLAUDE.md`.** The form follows the role — a skill is multi-file so it is a folder; an index is a flat list so it is one file; records are many small docs so they are a folder of them.
+Decide by what the thing _does_: **run it (headless) → `tools/`; reuse it as a function the game preloads at runtime → `tools/lib/`; load it to learn → `.claude/skills/`; remember a decision → `library/<kind>/`; a fetch-list → `library/sources/`; always-on → `CLAUDE.md`.** The form follows the role — a skill is multi-file so it is a folder; an index is a flat list so it is one file; records are many small docs so they are a folder of them.
 
 ## What's in this folder
 

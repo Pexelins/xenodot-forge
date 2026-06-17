@@ -119,7 +119,9 @@ function buildLogRow(entry) {
   if (entry.kind === "say") {
     row.append(el("span", "log-text", entry.text));
   } else {
-    row.append(el("span", `verb-pill verb-${entry.kind}`, entry.verb));
+    const pill = el("span", `verb-pill verb-${entry.kind}`, entry.verb);
+    if (entry.color) pill.style.setProperty("--hermes-pill", entry.color);
+    row.append(pill);
     const detailEl = el("span", "log-detail");
     detailEl.append(Object.assign(document.createElement("bdo"), { textContent: detail }));
     row.append(detailEl);

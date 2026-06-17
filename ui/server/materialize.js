@@ -2,9 +2,11 @@
 // committed game stays pure (both are gitignored) while the plugin remains the single
 // source of truth. Regenerated deterministically on server startup, `doctor`, `forge new`.
 //
-//   • tools/   — COPIED from plugin/tools. Godot's `--script` runs the .gd verify/gen
-//                helpers from inside the project (res://), so they must be real files
-//                in the game. Read-only at runtime; new tools are added to the plugin.
+//   • tools/   — COPIED (recursively) from plugin/tools. Godot's `--script` runs the .gd
+//                verify/gen helpers from inside the project (res://), so they must be real
+//                files in the game. Read-only at runtime; new tools are added to the plugin.
+//                Recursion also brings tools/lib/ — the runtime stdlib of class_name helpers
+//                the game preloads (NodeBuilder, MeshFlasher, …).
 //   • library/ — SYMLINKED to plugin/library. Researcher agents READ sources and WRITE
 //                verdicts/digests here; a symlink keeps the framework the single source
 //                so that knowledge persists in the plugin, not a throwaway game copy.
@@ -30,18 +32,31 @@ import { FRAMEWORK_PLUGIN_DIR, ASSET_LIBRARY, RES_ASSET_MOUNT } from "./config.j
 const TOOLS_SRC = path.join(FRAMEWORK_PLUGIN_DIR, "tools");
 const LIB_SRC = path.join(FRAMEWORK_PLUGIN_DIR, "library");
 
-/** Copy plugin/tools → <projectDir>/tools, overwriting only when the source is newer or
- * the file is missing. Additive: never deletes files it didn't write, so a game's own
- * tools survive. @param {string} projectDir @returns {{copied:number, fresh:number}} */
+/** Copy plugin/tools → <projectDir>/tools (recursively, including tools/lib/ — the runtime
+ * stdlib), overwriting only when the source is newer or the file is missing. Additive: never
+ * deletes files it didn't write, so a game's own tools survive.
+ * @param {string} projectDir @returns {{copied:number, fresh:number}} */
 export function materializeTools(projectDir) {
   const tally = { copied: 0, fresh: 0 };
   if (!existsSync(TOOLS_SRC)) return tally;
-  const dst = path.join(projectDir, "tools");
-  mkdirSync(dst, { recursive: true });
-  for (const entry of readdirSync(TOOLS_SRC, { withFileTypes: true })) {
+  copyTreeAdditive(TOOLS_SRC, path.join(projectDir, "tools"), tally);
+  return tally;
+}
+
+/** Recursively copy srcDir → dstDir, overwriting a file only when the source is newer or the
+ * destination is missing (additive: never deletes). Recurses into subdirectories so the runtime
+ * stdlib in tools/lib/ is materialized too. `.sh` files are made executable.
+ * @param {string} srcDir @param {string} dstDir @param {{copied:number, fresh:number}} tally */
+function copyTreeAdditive(srcDir, dstDir, tally) {
+  mkdirSync(dstDir, { recursive: true });
+  for (const entry of readdirSync(srcDir, { withFileTypes: true })) {
+    const s = path.join(srcDir, entry.name);
+    const d = path.join(dstDir, entry.name);
+    if (entry.isDirectory()) {
+      copyTreeAdditive(s, d, tally);
+      continue;
+    }
     if (!entry.isFile()) continue;
-    const s = path.join(TOOLS_SRC, entry.name);
-    const d = path.join(dst, entry.name);
     if (existsSync(d) && statSync(d).mtimeMs >= statSync(s).mtimeMs) {
       tally.fresh++;
       continue;
@@ -50,7 +65,6 @@ export function materializeTools(projectDir) {
     if (entry.name.endsWith(".sh")) chmodSync(d, 0o755);
     tally.copied++;
   }
-  return tally;
 }
 
 /** Ensure <projectDir>/library is a symlink to the plugin's library (the single source

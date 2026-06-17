@@ -2801,8 +2801,10 @@ input.cmd::placeholder {
   border-color: var(--border);
 }
 
-/* External Hermes researcher — a teal distinct from bash-green/task-purple so its
-   relayed progress lines read as "not one of our Xenodots" in the activity stream. */
+/* External Hermes coworker personas — one base pill whose hue comes from the persona's `color`,
+   set inline as `--hermes-pill` by the activity log (see ui/lib/personas/). Distinct from
+   bash-green/task-purple so relayed progress reads as "not one of our Xenodots". Falls back to
+   teal when a relay carries no color. Adding a persona needs no CSS. */
 .verb-hermes {
   --hermes-pill: oklch(0.78 0.1 195);
   background: color-mix(in oklab, var(--hermes-pill) 12%, transparent);
@@ -3195,6 +3197,42 @@ input.cmd::placeholder {
 }
 
 .req {
+  color: var(--red);
+}
+
+/* Hermes Settings — collapsible install runbook + connection-test verdict. */
+.settings-install {
+  margin: 4px 0 10px;
+}
+.settings-install summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--accent-text);
+}
+.settings-code {
+  background: var(--bg-1, #000);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin: 8px 0;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  color: var(--text-2);
+}
+.settings-status {
+  min-height: 15px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.settings-status.pending {
+  color: var(--text-3);
+}
+.settings-status.ok {
+  color: var(--green);
+}
+.settings-status.bad {
   color: var(--red);
 }
 

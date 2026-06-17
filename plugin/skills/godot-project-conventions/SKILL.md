@@ -20,6 +20,7 @@ This skill is the keystone: it makes project-wide decisions once, applies them t
    - Renderer: **Forward+** (`rendering/renderer/rendering_method="forward_plus"`). Required by the normal-roughness texture used in outline shaders. Non-negotiable for this art style; flag to the user if the project targets web export (Compatibility-only), since that drops normal-based outlines.
    - Window: base size **1920×1080**; Stretch Mode `canvas_items`, Aspect `keep`.
    - Physics/render layers: layer 1 = world, layer 2 = player, layer 3 = enemies (extend, never renumber).
+   - Strict gate files: ensure `project.godot` has the `[debug]` GDScript warnings escalated to errors (the warnings-as-errors contract), a `gdlintrc` (blocking lint caps + naming), and `gdstyle.toml` (in-editor advisory lint). The starter ships all three; for a pre-existing project, copy them from `starter/`.
 
 3. **Create folder layout** (only the folders needed now; create others on demand):
 
@@ -41,17 +42,19 @@ This skill is the keystone: it makes project-wide decisions once, applies them t
 - Engine: Godot 4.3+ (reversed-Z). Renderer: Forward+ (required by outline shaders).
 - Art style: 3D pixel art. 3D content renders inside a SubViewport (skill: godot-3d-pixelation); post-process effects attach to the camera inside it.
 - Camera: projection is genre-dependent. The pixel-art look comes from the SubViewport downscale (godot-3d-pixelation), not the camera. Orthographic fixed-angle (skill: godot-orthographic-follow-camera) is the default for top-down/iso games; first-person/third-person genres use a perspective eye-camera inside the SubViewport. Switching projection only trades the texel-snapping behaviour — flag it, don't forbid it.
-- Folders: scenes/, entities/, levels/, shaders/post/, resources/.
-- Naming: node names PascalCase; files and folders snake_case; one scene per entity in entities/<name>/.
+- Folders: scenes/, entities/, levels/, shaders/post/, resources/. Reusable stateless GDScript → tools/lib/ (class_name helpers the game preloads, e.g. NodeBuilder); reusable stateful behavior → a component scene in entities/components/.
+- Naming: node names PascalCase; files and folders snake_case; one scene per entity in entities/<name>/ (typing, naming regexes, file-header, size caps: skill godot-code-rules).
+- Composition (SOLID): entity = engine-node base + component children; signals up / calls down; @export over subclass-per-variant; pure logic classes use \_init() constructor DI, no autoload service-locator (skill: godot-composition).
 - Input actions: move_left, move_right, move_forward, move_back, jump.
 - Shader contract: single post-process shader at res://shaders/post/post_process.gdshader; helpers get_linear_depth(), get_normal() (skill: godot-screen-effects).
-- Code rules: strict typed GDScript (skill: godot-code-rules) — warnings-as-errors, gdlint/gdformat, validate gate.
+- Code rules: strict typed GDScript (skill: godot-code-rules) — warnings-as-errors + gdlint/gdformat via the validate gate (blocking). In-editor linting: gdstyle (advisory; config gdstyle.toml, install tools/install_gdstyle.sh).
 - Rule for AI sessions: read this section before structural changes; load godot-code-rules before writing or editing any .gd file; record new project-wide decisions here, not in chat.
 ```
 
 ## Verification checklist
 
 - [ ] `CLAUDE.md` contains the `## Project conventions` section.
+- [ ] `project.godot` has the `[debug]` warnings block; `gdlintrc` and `gdstyle.toml` are present (new games inherit all three from the starter).
 - [ ] `project.godot` shows `rendering_method="forward_plus"` (absence of the key also means Forward+, the default).
 - [ ] The five folders exist; Input Map lists the five actions.
 - [ ] Project opens and runs (F5) without errors (gray screen is fine at this stage).

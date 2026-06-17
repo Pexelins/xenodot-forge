@@ -9,7 +9,7 @@
     {
       "name": "xenodot",
       "description": "Agents (design → build → verify pipeline), godot-* skills, verification tools and safety hooks for building Godot / Redot / Blazium games with Claude Code.",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "author": { "name": "Xenodot Forge" },
       "source": "./plugin",
       "category": "development",

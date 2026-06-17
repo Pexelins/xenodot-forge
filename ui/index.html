@@ -388,25 +388,58 @@
           it never writes files or adopts anything. When off, research falls back to the Xenodot
           researchers.
         </p>
+        <details class="settings-install">
+          <summary>First time? You must install &amp; run Hermes on this machine first ▾</summary>
+          <p class="modal-sub muted">
+            Hermes is a <strong>separate program with its own model and its own billing</strong>
+            (your Anthropic plan does not cover it). It has no hosted endpoint — you run it locally,
+            then point Xenodot at it.
+          </p>
+          <p class="modal-sub muted">
+            <strong>Fastest:</strong> run <code>npm run hermes:setup</code> in a terminal — it does
+            steps 1, 3 and the wiring for you, and hands off to <code>hermes setup</code> for the
+            model. Then just <code>hermes gateway</code> (step 4) and Test connection below. Or do it
+            all by hand:
+          </p>
+          <pre class="settings-code">
+# 1. Install (sets up python/node/ripgrep + the global `hermes` command)
+curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
+
+# 2. Pick a model + paste your PROVIDER key (the billable one — stays inside Hermes)
+hermes setup --portal
+
+# 3. Turn the local API server on — add to ~/.hermes/.env :
+#      API_SERVER_ENABLED=true
+#      API_SERVER_KEY=pick-any-secret      ← this is the "Server key" below
+#                                            (you invent it; not billable)
+
+# 4. Run the gateway (serves http://localhost:8642)
+hermes gateway</pre>
+          <p class="modal-sub muted">
+            Then fill the fields below: URL <code>http://localhost:8642</code>, Server key = the
+            <code>API_SERVER_KEY</code> you invented in step 3. Hit <strong>Test connection</strong>
+            to confirm it's reachable. Full runbook: <code>HERMES.md</code>.
+          </p>
+        </details>
         <label class="form-label settings-toggle">
           <input type="checkbox" id="hermes-enabled" />
           Enable Hermes
         </label>
-        <label class="form-label" for="hermes-url">API URL</label>
+        <label class="form-label" for="hermes-url">Hermes server URL</label>
         <input
           class="form-input"
           id="hermes-url"
-          placeholder="http://localhost:8000  (your Hermes API server)"
+          placeholder="http://localhost:8642  (your running Hermes gateway)"
         />
-        <label class="form-label" for="hermes-key">API key</label>
+        <label class="form-label" for="hermes-key">Server key (Hermes <code>API_SERVER_KEY</code>)</label>
         <input
           class="form-input"
           id="hermes-key"
           type="password"
           autocomplete="off"
-          placeholder="leave blank to keep the saved key"
+          placeholder="the API_SERVER_KEY you set on your Hermes server"
         />
-        <label class="form-label" for="hermes-model">Model</label>
+        <label class="form-label" for="hermes-model">Hermes model (label only)</label>
         <select class="form-input" id="hermes-model"></select>
         <input
           class="form-input"
@@ -415,13 +448,15 @@
           style="display: none"
         />
         <p class="modal-sub muted">
-          On a single-profile Hermes server the API <code>model</code> field is cosmetic — the real
-          model is set in Hermes' own <code>~/.hermes/config.yaml</code>. We pass your choice through
-          regardless.
+          This is a label only — the model that powers Hermes is chosen inside Hermes
+          (<code>hermes setup</code> → <code>~/.hermes/config.yaml</code>), not here. We don't send a
+          model with the request.
         </p>
+        <div class="settings-status" id="hermes-status"></div>
         <div class="modal-error" id="settings-error"></div>
         <div class="modal-actions">
           <button class="btn ghost" id="settings-cancel">Cancel</button>
+          <button class="btn ghost" id="hermes-test">Test connection</button>
           <button class="btn primary" id="settings-save">Save</button>
         </div>
       </div>

@@ -37,8 +37,38 @@ function toggleCustom(value) {
   if (isCustom && value) custom.value = value;
 }
 
+/** Probe the gateway with whatever URL/key is currently typed (blank key → saved key)
+ * and show a one-line verdict, so you can confirm reachability before saving. */
+async function testConnection() {
+  const status = $("hermes-status");
+  $("settings-error").textContent = "";
+  status.className = "settings-status pending";
+  status.textContent = "Testing…";
+  try {
+    const r = /** @type {import("../lib/types.js").HermesCheck} */ (
+      await postJSON("/api/hermes/check", {
+        apiUrl: $input("hermes-url").value.trim(),
+        apiKey: $input("hermes-key").value.trim(),
+      })
+    );
+    if (r.ok) {
+      const list = r.models?.length ? ` — models: ${r.models.slice(0, 4).join(", ")}` : "";
+      status.className = "settings-status ok";
+      status.textContent = `✓ Reachable${list}`;
+    } else {
+      status.className = "settings-status bad";
+      status.textContent = `✗ ${r.error ?? "Unreachable."}`;
+    }
+  } catch {
+    status.className = "settings-status bad";
+    status.textContent = "✗ Test failed — is the UI server up to date? (restart with npm start)";
+  }
+}
+
 async function open() {
   $("settings-error").textContent = "";
+  $("hermes-status").textContent = "";
+  $("hermes-status").className = "settings-status";
   try {
     const state = /** @type {import("../lib/types.js").ProjectState} */ (
       await fetchJSON("/api/state")
@@ -94,6 +124,9 @@ export function initSettings() {
   $("settings-cancel").onclick = close;
   $("settings-save").onclick = () => {
     void save();
+  };
+  $("hermes-test").onclick = () => {
+    void testConnection();
   };
   $("hermes-model").addEventListener("change", () => {
     toggleCustom("");

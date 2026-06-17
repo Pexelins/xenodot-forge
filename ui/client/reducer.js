@@ -9,6 +9,7 @@
 // bare node.
 import { VERB_KIND, toolDetail } from "./format.js";
 import { agentLabel } from "./agents.js";
+import { getPersona } from "../lib/hermes-personas.js";
 
 /** @typedef {import("./store.js").State} State */
 /** @typedef {import("./store.js").ChatEntry} ChatEntry */
@@ -64,14 +65,18 @@ export function reduce(s, msg) {
  * thinking indicator; "done" clears the indicator. @param {State} s
  * @param {Extract<ServerMsg, { type: "hermes" }>} msg @returns {State} */
 function foldHermes(s, msg) {
+  const persona = getPersona(msg.persona);
   const detail = msg.text.slice(0, 200);
   return {
     ...s,
     thinking:
       msg.phase === "done"
         ? { active: false, label: "" }
-        : { active: true, label: `Hermes · ${detail.slice(0, 60)}` },
-    activity: [...s.activity, { kind: "hermes", agent: "hermes", verb: "Hermes", detail }],
+        : { active: true, label: `${persona.name} · ${detail.slice(0, 60)}` },
+    activity: [
+      ...s.activity,
+      { kind: "hermes", agent: "hermes", verb: persona.name, detail, color: persona.color },
+    ],
   };
 }
 

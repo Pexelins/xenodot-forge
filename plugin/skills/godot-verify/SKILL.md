@@ -57,6 +57,39 @@ Notes:
 - **Not headless** — needs display; small window flashes ~1 second. If no display: say so, report layer 3 as not run.
 - Frame saved to `.godot/verify_render_last.png` for human inspection — never paste/read it into chat.
 - Run on `main.tscn` only (or standalone entry-point scenes). Levels and entity scenes don't render standalone in Main-shell architecture (Main provides camera — skill: godot-main-scene). Layers 1–2 still run on all changed scenes.
+- **Scope: startup render only.** Layer 3 proves the scene is not black at frame ~20 with NO input — it samples one frame and checks global luminance spread. It does NOT drive input, advance through interactions, or check single-color flood. Input-driven / mid-gameplay / first-person VIEW-MODEL visuals (a weapon shown at rest, a mesh face clipping the near plane after a swing, anything behind a keypress/tween) are INVISIBLE to it. An F5/F6 play-through remains mandatory for view-model and interaction visuals; do not report those as verified from Layer 3.
+
+## Layer 4 — input-driven render assert (OPT-IN)
+
+```bash
+$GODOT --path . --resolution 640x360 -s tools/verify_render_action.gd \
+    -- main.tscn method:Melee:try_melee 60 40
+```
+
+Args (after `--`): `<scene> <trigger> <settle_frames> <flood_threshold_pct> [output_png]`
+
+- `<trigger>`: `method:<node_name>:<method_name>` | `action:<action_name>` | `none`
+- `<settle_frames>`: physics frames to wait after trigger before capture (default `60`)
+- `<flood_threshold_pct>`: fail if dominant color bucket covers more than N% of SubViewport pixels (default `40`)
+
+**Scope: input-driven view-model / interaction artifacts.** Catches the class of bug Layer 3 cannot see: a near-plane-clip solid square filling the screen after a melee swing, or a view-model mesh rendered over the HUD after an action. Loads the scene, warms up 20 frames, fires the trigger (method call or input action), waits `settle_frames` for tweens/animations to finish, captures the SubViewport (pixel-art rig), and asserts no single color bucket floods more than `flood_threshold_pct`% of pixels.
+
+Output:
+
+```
+VERIFY-RENDER-ACTION: OK   — <scene> trigger=<trigger> (dominant_color_pct=X%)
+VERIFY-RENDER-ACTION: FAIL — <scene>: single color floods X% of screen (threshold N%)
+VERIFY-RENDER-ACTION: SKIP — no display (headless renderer detected)
+```
+
+Exit 0 = pass or skip; 1 = fail. Frame saved to `.godot/verify_render_action_last.png`.
+
+Notes:
+
+- **Not headless** — needs display; same constraint as Layer 3. On headless renderer (CI without Xvfb) it self-skips with exit 0 — safe to call unconditionally in a CI job.
+- `method:` trigger uses `find_child(name, recursive=true)` — node name only, not a path.
+- Set `settle_frames` ≥ `cooldown / physics_delta` so the tween completes before capture (e.g. 60 frames @ 60 fps covers a 0.45 s cooldown).
+- **OPT-IN — NOT in `validate.sh` default gate.** Slow (display required, settles N frames) and trigger-specific. Run manually or in a targeted CI job when merging view-model or weapon PRs.
 
 ## Hand-authoring .tscn rules
 
@@ -68,11 +101,12 @@ Both are "valid but renders black" traps:
 - `#` comments valid between `[sub_resource]` and `[ext_resource]` blocks. **Must NOT appear between `[node]` blocks** — parser fails to resolve parent paths. Annotate nodes with `editor_description = "..."` instead.
 - A typed node-reference export (`@export var xs: Array[Marker3D]`) does **NOT** serialize in a hand-authored `.tscn` — the node types can't be resolved at property-assign, so the array loads empty with no error. Export `Array[NodePath]` and resolve to the typed array in `_ready()`.
 
-## Pass criteria (all three required)
+## Pass criteria (all three required; Layer 4 opt-in)
 
 1. Layer 1: `VERIFY: OK`, exits 0.
 2. Layer 2: grep finds nothing.
 3. Layer 3: `VERIFY-RENDER: OK` for every changed entry-point scene.
+4. Layer 4 (opt-in): `VERIFY-RENDER-ACTION: OK` or `SKIP` — run when merging view-model / weapon changes.
 
 If Godot binary unavailable: say so explicitly — do not claim verification.
 
@@ -89,6 +123,7 @@ If Godot binary unavailable: say so explicitly — do not claim verification.
 | Layer 3 flat color on level/entity scene                                                                              | Expected in Main-shell — levels/entities have no camera. Layer 3 doesn't apply; only layers 1–2 required                                                                                                                                                                                                                                                                                                |
 | Layer 3 looks wrong but says OK                                                                                       | Spread check only proves _something_ rendered — composition/look is human's call; run F5/F6                                                                                                                                                                                                                                                                                                             |
 | Render OK but scene behaviorally broken (no enemies, actors inert/floating, nothing spawns)                           | Layer 3 only proves something rendered, not that gameplay works. For a generated gameplay scene, add a headless behavior-assertion script (load the scene, advance a few physics frames, assert invariants — actor/spawn counts ≥ expected, `NavigationRegion3D` present, state machines instantiated). Pattern, not a fixed tool; complements the static actor-inventory check in godot-gridmap-level. |
+| View-model / post-interaction artifact (weapon on top of HUD, solid square after an action) passed Layer 3            | Expected — Layer 3 is a startup snapshot, no input. Run Layer 4: `$GODOT --path . --resolution 640x360 -s tools/verify_render_action.gd -- main.tscn method:<node>:<method> 60 40`. If it reports `FAIL … floods X%`, the artifact is confirmed; investigate near-plane clip (camera near plane too large) or view-model visibility logic.                                                              |
 | `Leaked instance` / `RID allocations leaked at exit` / `ObjectDB instances leaked` / `resources still in use at exit` | Benign Godot 4 headless cleanup noise — NOT an error. Ignore. The last (`resources still in use at exit`) fires when actively-playing **looping audio** holds its stream as `--quit-after` terminates before scene-tree teardown; the Layer 2 smoke grep excludes all four.                                                                                                                             |
 
 ## RTK note
