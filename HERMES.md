@@ -28,7 +28,7 @@ This installs Hermes if it's missing, turns the local API server on in `~/.herme
 directly** via `hermes config set`, registers the Hive-side **MCP callback** so Hermes can report
 progress + findings back to your UI (`mcp_servers.xenodot`), installs the Xenodot "partner" persona
 into `~/.hermes/SOUL.md` (only if it's absent or the stock template — a customized SOUL is never
-overwritten; source: `ui/server/hermes-soul.md`), echoes what Hermes persisted, and wires
+overwritten; source: `ui/server/integrations/hermes/hermes-soul.md`), echoes what Hermes persisted, and wires
 Xenodot's config.
 It **never launches an interactive Hermes command** (`hermes setup`/`model`/`tools`) — those
 pickers are exactly what trap you. Flags:

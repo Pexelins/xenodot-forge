@@ -20,8 +20,13 @@ Rules for working **on the framework itself** (the Node/TS web UI and tooling un
 
 ## Layout
 
-- `ui/server/` — Node server + CLI scripts (`setup`, `new`, `promote`, `doctor`, `materialize`, `update-badges`).
-- `ui/client/` — browser modules. `ui/lib/` — shared JSDoc typedefs + helpers.
+- `ui/server/` — Node server + CLI scripts, grouped by domain: `core/` (+ `core/http/`),
+  `integrations/{hermes,codex}/`, `features/{tasks,assets,levels,promotions,transcripts}/`,
+  `mcp-tools/` (the in-process `makeXTool` SDK tools), and `cli/` (`setup`, `new`, `promote`,
+  `doctor`, `materialize`, `update-badges`, `release-*`). New files go in the matching domain.
+- `ui/client/` — browser modules, grouped by domain: `core/` (state, transport, dom/render
+  helpers, `main.js` entry) and `features/{chat,activity,tasks,approvals,agents,settings,
+sessions,promotions,project,level-editor,assets}/`. `ui/lib/` — shared JSDoc typedefs + helpers.
 - `plugin/` — the **xenodot** Claude Code plugin: the framework's agents, skills, tools, hooks
   and knowledge base (`library/`). The single source of truth, loaded into every game session
   via the SDK `plugins` option (`session.js`) so games need no copies; terminal use installs it

@@ -5,11 +5,11 @@
 if [ -t 1 ]; then
   printf "Release for this commit? [enter=skip] feat|fix|chore|refactor: " >/dev/tty
   read -r XREL </dev/tty || XREL=""
-  [ -n "$XREL" ] && node ui/server/release-stage.js "$XREL"
+  [ -n "$XREL" ] && node ui/server/cli/release-stage.js "$XREL"
 fi
 
 # Keep the README badges in sync with the plugin (the framework's source of truth),
 # then lint + format the staged files (lint-staged also tidies the re-staged README).
 # update-badges git-adds what it touches so it lands in the commit.
-node ui/server/update-badges.js
+node ui/server/cli/update-badges.js
 npx lint-staged

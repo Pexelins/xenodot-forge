@@ -2,22 +2,22 @@
 
 ## Conventions
 
-- **No build step.** `index.html` (structure) + `agent-ui.css` (all styling) + the `client/` ES modules (all behavior, entry `client/main.js`), served by the `server/` modules (entry `server/index.js`). Shared, env-agnostic helpers live in `lib/`. The browser loads the client as native ES modules (`<script type="module">`) and Node runs the server as ES modules — no bundler. If a change needs one, it's out of scope for this POC. Static files are re-read per request: edit and refresh.
+- **No build step.** `index.html` (structure) + `agent-ui.css` (all styling) + the `client/` ES modules (all behavior, entry `client/core/main.js`), served by the `server/` modules (entry `server/core/index.js`). Shared, env-agnostic helpers live in `lib/`. The browser loads the client as native ES modules (`<script type="module">`) and Node runs the server as ES modules — no bundler. If a change needs one, it's out of scope for this POC. Static files are re-read per request: edit and refresh.
 - **Design tokens** live as CSS variables in `:root` of `agent-ui.css` (`--accent`, `--bg`, `--panel*`, `--border*`, `--text*`, `--green`, `--amber`, `--red`, `--blue`, `--purple`, layout `--sidebar-w`/`--activity-w`). Use them; don't hardcode colors.
-- **Agent colors**: `client/agents.js` assigns each agent a color from a curated, well-separated palette on first appearance (stable per page load), so several agents running at once stay distinct; `paint()` sets `--agent-color` on the node. `main` keeps the ember accent.
-- **One session per WebSocket connection.** Refresh = new Claude Code session. Sessions run in the project directory passed to `server/index.js` and load its `.claude/` (agents, skills, CLAUDE.md).
+- **Agent colors**: `client/features/agents/agents.js` assigns each agent a color from a curated, well-separated palette on first appearance (stable per page load), so several agents running at once stay distinct; `paint()` sets `--agent-color` on the node. `main` keeps the ember accent.
+- **One session per WebSocket connection.** Refresh = new Claude Code session. Sessions run in the project directory passed to `server/core/index.js` and load its `.claude/` (agents, skills, CLAUDE.md).
 - **Resume**: connect with `ws://host?resume=<session-id>` (the page does this via `/?resume=<id>`, used by the sidebar's recent-sessions list) to continue a previous session with full context.
 - **The server holds no state.** Project inventory is scanned from disk per request; the browser holds per-session chat state only.
 
 ## HTTP
 
-| Route                    | Returns                                                                                                                                                                                                           |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /`                  | the UI page                                                                                                                                                                                                       |
-| `GET /api/state`         | live project inventory (JSON, scanned on every call — never cached, never stale)                                                                                                                                  |
-| `GET /api/sessions`      | recent sessions from the NDJSON logs: `[{ id, title, when }]` — `id` is the Claude Code session id                                                                                                                |
-| `POST /api/settings`     | merge a settings block into `.xenodot.json` (currently `{ hermes }`); replies with the key-free `{ hermes }` public view. Takes effect immediately — config is re-read per Hermes call, no restart                |
-| `POST /api/hermes/check` | probe the Hermes gateway (URL/key from the body, or saved config) and reply with a reachability/auth/models/capabilities verdict. `GET /v1/models` only — no model run, no billing. See ui/server/hermes-check.js |
+| Route                    | Returns                                                                                                                                                                                                                               |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /`                  | the UI page                                                                                                                                                                                                                           |
+| `GET /api/state`         | live project inventory (JSON, scanned on every call — never cached, never stale)                                                                                                                                                      |
+| `GET /api/sessions`      | recent sessions from the NDJSON logs: `[{ id, title, when }]` — `id` is the Claude Code session id                                                                                                                                    |
+| `POST /api/settings`     | merge a settings block into `.xenodot.json` (currently `{ hermes }`); replies with the key-free `{ hermes }` public view. Takes effect immediately — config is re-read per Hermes call, no restart                                    |
+| `POST /api/hermes/check` | probe the Hermes gateway (URL/key from the body, or saved config) and reply with a reachability/auth/models/capabilities verdict. `GET /v1/models` only — no model run, no billing. See ui/server/integrations/hermes/hermes-check.js |
 
 `/api/state` shape:
 
@@ -89,9 +89,9 @@ Notes:
 - **Background Xenodots.** When the orchestrator spawns a sub-agent with the Task tool's `run_in_background: true`, the call returns immediately and the hive turn ends, so the user can keep messaging the hive while the worker runs. The client drives the running-agents strip for these from the SDK's `system` events (forwarded as `event`): `task_started` (binds `task_id`↔`tool_use_id`), `task_progress`, `task_updated` (`patch.is_backgrounded`/`status`), and `task_notification` (`status: completed|failed|stopped`, `summary`) which ends the chip. A backgrounded worker's immediate "running in the background" `tool_result` does NOT end its chip — only the `task_notification` does. Interview agents are never backgrounded (they block on `mcp__ui__form`).
 - `permission` cards only appear for tools not already allowed by the project/user settings — an allowlisted Bash command never prompts.
 - Custom free-text answers to `ask` are sent the same way as option labels.
-- `mcp__ui__form` is an in-process MCP tool defined in `server/form-tool.js` (`makeFormTool`); its handler waits for the `reply` and returns the values as the tool result (JSON keyed by field id).
-- `mcp__ui__tasks` is an in-process MCP tool defined in `server/task-tool.js` (`makeTaskTool`); the orchestrator calls it with `op: add | update | remove` to manage its task board. Unlike the form tool it does **not** pause the session — it mutates `.xenodot/tasks.json` (via `server/tasks-store.js`), broadcasts the new `tasks` list, and returns a one-line summary. Like the form tool it bypasses the permission policy.
-- `mcp__ui__ask` is an in-process MCP tool defined in `server/ask-tool.js` (`makeAskTool`); the **async** counterpart to `mcp__ui__form` for background/autonomous workers that can't pause for a reply. It files the question onto the board as an `owner:"user"`, `kind:"question"` item (via `addQuestion`), broadcasts `tasks`, and returns **immediately** (never pauses). The user answers it inline (a `task_update` with `answer`); the orchestrator reads the answer on a later turn and relays/acts on it.
+- `mcp__ui__form` is an in-process MCP tool defined in `server/mcp-tools/form-tool.js` (`makeFormTool`); its handler waits for the `reply` and returns the values as the tool result (JSON keyed by field id).
+- `mcp__ui__tasks` is an in-process MCP tool defined in `server/mcp-tools/task-tool.js` (`makeTaskTool`); the orchestrator calls it with `op: add | update | remove` to manage its task board. Unlike the form tool it does **not** pause the session — it mutates `.xenodot/tasks.json` (via `server/features/tasks/tasks-store.js`), broadcasts the new `tasks` list, and returns a one-line summary. Like the form tool it bypasses the permission policy.
+- `mcp__ui__ask` is an in-process MCP tool defined in `server/mcp-tools/ask-tool.js` (`makeAskTool`); the **async** counterpart to `mcp__ui__form` for background/autonomous workers that can't pause for a reply. It files the question onto the board as an `owner:"user"`, `kind:"question"` item (via `addQuestion`), broadcasts `tasks`, and returns **immediately** (never pauses). The user answers it inline (a `task_update` with `answer`); the orchestrator reads the answer on a later turn and relays/acts on it.
 - **Auto-deny visibility.** A backgrounded (headless) sub-agent's tool call can be auto-denied by the SDK with no interactive prompt (no approver to reach). The server forwards the SDK's `permission_denied` system message as a `permission_denied` UI message so the friction is visible in the activity log (and, for background, a banner) instead of dying silently as an `is_error` inside a sub-agent transcript. Fix by granting the agent a `permission-mode` (e.g. `acceptEdits`) or a static allow rule.
 - The task board persists in `<project>/.xenodot/tasks.json` (the server's only on-disk session state), so it survives across sessions and resumes — the file is the source of truth the agent can also read directly.
 
@@ -107,7 +107,7 @@ Per-session, switchable live from the header dropdown:
 
 `AskUserQuestion` and the `mcp__ui__form` form tool always reach the user regardless of policy — questions are the product, not a permission.
 
-Server default for all new sessions: `node ui/server/index.js <project> --allow=edits` (or `all`).
+Server default for all new sessions: `node ui/server/core/index.js <project> --allow=edits` (or `all`).
 
 ## Logs
 

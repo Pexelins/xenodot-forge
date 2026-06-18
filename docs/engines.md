@@ -98,7 +98,7 @@ True cross-engine support (Unity, Unreal, Bevy — different language, scene for
 and CLI) is **out of scope** and not built. If it's ever pursued, the seam is
 already named:
 
-- **`ENGINE` config** (`ui/server/config.js`) — project detection + the engine
+- **`ENGINE` config** (`ui/server/core/config.js`) — project detection + the engine
   identity the framework reads.
 - **The `$GODOT` invocation convention** (`tools/validate.sh`, `godot-verify`) —
   every place the framework actually drives the engine.

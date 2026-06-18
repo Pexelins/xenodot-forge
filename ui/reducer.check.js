@@ -5,8 +5,8 @@
 // identity-diff invariant the per-slice store subscription depends on. Not part
 // of `npm run validate`; run by hand after touching reducer.js.
 import assert from "node:assert/strict";
-import { reduce } from "./client/reducer.js";
-import { initialState } from "./client/store.js";
+import { reduce } from "./client/core/reducer.js";
+import { initialState } from "./client/core/store.js";
 
 /** @typedef {import("./lib/types.js").ServerMsg} ServerMsg */
 /** @typedef {import("./lib/types.js").ContentBlock} ContentBlock */
