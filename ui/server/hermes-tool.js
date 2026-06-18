@@ -27,6 +27,7 @@ import { tool } from "@anthropic-ai/claude-agent-sdk";
 import { z } from "zod";
 import { parseJSON } from "../lib/json.js";
 import { getHermesConfig } from "./config.js";
+import { applyOp } from "./tasks-store.js";
 import { getPersona, PERSONA_IDS } from "../lib/hermes-personas.js";
 
 /** @typedef {(obj: import("../lib/types.js").OutMsg) => void} Send */
@@ -122,6 +123,29 @@ function findingsTurn(runId, persona, findings) {
   };
 }
 
+/** The synthetic user turn that tells the Hive a fired run did NOT deliver (failed, timed out, or
+ * stalled on an approval gate). Re-enters the session like a user message so the Hive's prompt
+ * fallback fires — dispatch the matching researcher directly instead of waiting forever.
+ * @param {string} runId @param {HermesPersona} persona @param {string} reason @returns {SDKUserMessage} */
+function fallbackTurn(runId, persona, reason) {
+  return {
+    type: "user",
+    parent_tool_use_id: null,
+    message: {
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text:
+            `[Hermes · ${persona.name} — run ${runId} did NOT deliver findings: ${reason}]\n\n` +
+            "Treat this as no Hermes result. Dispatch the matching xenodot:*-researcher yourself to " +
+            "run the investigation instead.",
+        },
+      ],
+    },
+  };
+}
+
 /** Resolve after `ms`, or early if `signal` aborts (so the watcher unblocks on teardown).
  * @param {number} ms @param {AbortSignal} signal @returns {Promise<void>} */
 function sleep(ms, signal) {
@@ -159,9 +183,9 @@ async function stopRun(base, key, runId) {
 }
 
 /** Decide what a polled run state means. @param {Record<string, unknown> | null} state
- * @param {string} runId @returns {{ kind: "pending" } | { kind: "approval" } |
- *   { kind: "completed", output: string } | { kind: "ended", text: string }} */
-function classifyRun(state, runId) {
+ * @returns {{ kind: "pending" } | { kind: "approval" } |
+ *   { kind: "completed", output: string } | { kind: "ended", reason: string }} */
+function classifyRun(state) {
   const status = typeof state?.status === "string" ? state.status.toLowerCase() : "";
   if (status.includes("approval")) return { kind: "approval" };
   if (status === "completed") {
@@ -171,7 +195,7 @@ function classifyRun(state, runId) {
   }
   if (status === "failed" || status === "cancelled" || status === "canceled") {
     const why = typeof state?.error === "string" ? ` — ${state.error.slice(0, 200)}` : "";
-    return { kind: "ended", text: `Hermes run ${runId} ${status}${why}.` };
+    return { kind: "ended", reason: `${status}${why}` };
   }
   return { kind: "pending" };
 }
@@ -243,6 +267,16 @@ async function streamProgress(base, key, runId, onText, signal) {
 async function watchRun(base, key, runId, persona, send, push) {
   const ctrl = new AbortController();
   const deadline = Date.now() + RUN_WALLCLOCK_MS;
+  // A run that didn't deliver: a `done` pill AND a fallback turn, so the Hive is re-engaged and
+  // its prompt fallback (dispatch the researcher) fires instead of the pipeline stalling silently.
+  const fail = (/** @type {string} */ reason) => {
+    relay(send, persona.id, "done", `Hermes run ${runId} ${reason}.`, runId);
+    try {
+      push(fallbackTurn(runId, persona, reason));
+    } catch {
+      /* session gone — nothing to deliver to */
+    }
+  };
   void streamProgress(
     base,
     key,
@@ -256,13 +290,7 @@ async function watchRun(base, key, runId, persona, send, push) {
     for (;;) {
       if (Date.now() > deadline) {
         await stopRun(base, key, runId);
-        relay(
-          send,
-          persona.id,
-          "done",
-          `Hermes run ${runId} exceeded ${Math.round(RUN_WALLCLOCK_MS / 60_000)}m — stopped.`,
-          runId,
-        );
+        fail(`exceeded the ${Math.round(RUN_WALLCLOCK_MS / 60_000)}m limit and was stopped`);
         return;
       }
       await sleep(POLL_INTERVAL_MS, ctrl.signal);
@@ -273,22 +301,15 @@ async function watchRun(base, key, runId, persona, send, push) {
       } catch {
         continue; // transient read error — keep polling until the deadline
       }
-      const verdict = classifyRun(state, runId);
+      const verdict = classifyRun(state);
       if (verdict.kind === "pending") continue;
       if (verdict.kind === "approval") {
         await stopRun(base, key, runId);
-        relay(
-          send,
-          persona.id,
-          "done",
-          `Hermes run ${runId} paused on an approval gate — unsupported headless; stopped. ` +
-            "Dispatch a xenodot:*-researcher instead.",
-          runId,
-        );
+        fail("paused on an approval gate (unsupported headless) and was stopped");
         return;
       }
       if (verdict.kind === "ended") {
-        relay(send, persona.id, "done", verdict.text, runId);
+        fail(verdict.reason);
         return;
       }
       // completed
@@ -297,6 +318,23 @@ async function watchRun(base, key, runId, persona, send, push) {
         push(findingsTurn(runId, persona, verdict.output));
       } catch {
         /* session gone — nothing to deliver to */
+      }
+      // Deterministically surface the delivery as a durable, user-owned lead on the task board the
+      // moment it lands — independent of the Hive's turn scheduling (same pattern as mcp__ui__ask /
+      // asset requests). The user reads the findings in the feed, then clicks this to route them.
+      try {
+        const tasks = applyOp(
+          {
+            op: "add",
+            owner: "user",
+            title: `Hermes · ${persona.name} findings ready (run ${runId})`,
+            note: "Review the findings in the feed, then route to the matching xenodot:*-researcher for the verdict + library write.",
+          },
+          new Date().toISOString(),
+        );
+        send({ type: "tasks", tasks });
+      } catch {
+        /* board write failed — non-fatal; the feed + findingsTurn still carry the delivery */
       }
       return;
     }

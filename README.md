@@ -2,7 +2,7 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 ![Godot-family 4.x](https://img.shields.io/badge/Godot--family-4.x-blue.svg)
-![Skills: 24](https://img.shields.io/badge/Skills-24-purple.svg)
+![Skills: 25](https://img.shields.io/badge/Skills-25-purple.svg)
 ![Agents: 11](https://img.shields.io/badge/Agents-11-orange.svg)
 ![Status: POC](https://img.shields.io/badge/Status-POC-yellow.svg)
 
