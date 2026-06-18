@@ -5,11 +5,14 @@
 //   2. turn the local API server on in ~/.hermes/.env (API_SERVER_ENABLED + a key it
 //      generates — the non-billable API_SERVER_KEY, see HERMES.md),
 //   3. set the provider with `hermes config set` (a scalar — that command works for those),
-//   4. restrict the toolset by editing config.yaml DIRECTLY (default: web, search, memory —
-//      NO terminal/file/code_execution). The API server runs as platform `api_server` and its
-//      tools execute ON THIS MACHINE, so we constrain `platform_toolsets.api_server` (the only
-//      key the bridge's path reads — not `cli`, not the top-level `toolsets:`). `config set`
-//      can't write lists, so this is a direct YAML edit,
+//   4. restrict the toolset by editing config.yaml DIRECTLY (default: web, search, memory,
+//      skills — NO terminal/file/code_execution/browser). `memory` + `skills` are Hermes' OWN
+//      brain (its episodic memory + self-evolving skills, written to ~/.hermes/) — they let
+//      Hermes get better at researching FOR us over time without ever touching the game or our
+//      framework files (that needs terminal/file/code, which stay OFF). The API server runs as
+//      platform `api_server` and its tools execute ON THIS MACHINE, so we constrain
+//      `platform_toolsets.api_server` (the only key the bridge's path reads — not `cli`, not the
+//      top-level `toolsets:`). `config set` can't write lists, so this is a direct YAML edit,
 //   5. read the file back and print the real values (no silent state),
 //   6. strip any stale `mcp_servers.xenodot` callback from older Xenodot versions (the bridge no
 //      longer uses an MCP callback — findings are READ from the runs API; see hermes-tool.js),
@@ -62,17 +65,20 @@ const PORT = val("port") ?? "8642";
 const URL = `http://localhost:${PORT}`;
 const INSTALL_CMD = "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash";
 
-// Defaults: Nous via Portal, and a worker toolset (research + light ops) that deliberately
-// leaves out code_execution. --model is optional: if omitted we set the provider only and
-// let you pick the exact model with `hermes model` (the model id strings are provider- and
-// version-specific, so we don't guess one for you). Override anything with a flag.
+// Defaults: Nous via Portal, and a worker toolset (research + self-improvement) that
+// deliberately leaves out machine access. --model is optional: if omitted we set the provider
+// only and let you pick the exact model with `hermes model` (the model id strings are provider-
+// and version-specific, so we don't guess one for you). Override anything with a flag.
 const PROVIDER = val("provider") ?? "nous";
 const MODEL = val("model");
-// SAFE DEFAULT: read-only research only. The API path runs tools ON THIS MACHINE
-// (gateway capabilities: tool_execution=server), and the shipped bridge is an advisory
-// researcher, so terminal/file/code_execution are OFF by default. Widen with --toolsets
-// (e.g. --toolsets=web,search,memory,terminal,file) only if you knowingly want that.
-const TOOLSETS = val("toolsets") ?? "web,search,memory";
+// SAFE DEFAULT: research + Hermes' OWN brain, no machine access. `web`/`search` research;
+// `memory` + `skills` are Hermes' own episodic memory + self-evolving skills (written to
+// ~/.hermes/ — NOT to the game or our framework), so Hermes gets better at researching for us
+// across runs. The API path runs tools ON THIS MACHINE (gateway capabilities:
+// tool_execution=server), so the things that could change the game/code —
+// terminal/file/code_execution/browser — stay OFF by default. Widen with --toolsets
+// (e.g. --toolsets=web,search,memory,skills,terminal,file) ONLY if you knowingly want that.
+const TOOLSETS = val("toolsets") ?? "web,search,memory,skills";
 const USE_PORTAL = (PROVIDER === "nous" || PROVIDER === "portal") && !flag("no-portal");
 
 /** Ask a yes/no-ish question; with --yes, auto-answer "y".
@@ -270,7 +276,10 @@ function configureModelAndTools() {
     `  ${ok ? "✓" : "✗"} API-path tools (platform_toolsets.api_server) → ${arr.join(", ")}`,
   );
   console.log(
-    "    terminal/file/code_execution stay OFF unless you list them (they run on THIS machine).",
+    "    memory + skills = Hermes' own brain (self-improvement, written to ~/.hermes/ — not your code).",
+  );
+  console.log(
+    "    terminal/file/code_execution/browser stay OFF unless you list them (they run on THIS machine).",
   );
 
   const after = readFileSync(cfg, "utf8").split("\n");

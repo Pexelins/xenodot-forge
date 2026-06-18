@@ -73,7 +73,13 @@ function buildInstructions(persona, context) {
     "\n\n--- How this runs ---\n" +
     "You are running headless for the Xenodot Hive: there is no interactive human in this run. " +
     "Your FINAL message IS your entire deliverable — put your complete, self-contained findings " +
-    "there (a partial answer or a question back is lost). Work to a conclusion, then stop.";
+    "there (a partial answer or a question back is lost). Work to a conclusion, then stop.\n\n" +
+    "--- Your own brain ---\n" +
+    "Use and grow your own memory and skills freely: if you work out a reusable research workflow, " +
+    "save it as a skill, and remember durable facts about this team and its stack — this is your " +
+    "private brain (~/.hermes) and it makes your next investigation faster. But you NEVER edit the " +
+    "caller's game or codebase, run their build, or write their files; you only investigate and " +
+    "report. Adopting anything into their project is a separate human-gated step you take no part in.";
   const extra = context?.trim();
   return persona.brief + headless + (extra ? `\n\n--- Task context ---\n${extra}` : "");
 }
@@ -200,6 +206,22 @@ function classifyRun(state) {
   return { kind: "pending" };
 }
 
+/** Map a Hermes tool name to a plain-language self-improvement line, or null if it isn't one.
+ * Hermes' own-brain tools (skill management + memory) are the self-improvement we now leave on;
+ * surfacing them lets you SEE Hermes learning. Best-effort: tool names may vary across versions,
+ * so we match on substrings. @param {string} tool @returns {string | null} */
+function describeSelfImprovement(tool) {
+  const t = tool.toLowerCase();
+  // Read-only skill loads (list/view) aren't learning — don't dress them up.
+  if (t.includes("skill") && /(manage|create|write|edit|patch|update|save|delete|remove)/.test(t)) {
+    return "🧠 Hermes is updating its own skills";
+  }
+  if (t.includes("memory") && !/(search|recall|read|view|list)/.test(t)) {
+    return "🧠 Hermes is updating its own memory";
+  }
+  return null;
+}
+
 /** Pull a short, human-meaningful progress line out of one parsed SSE event, or null to skip
  * (token deltas and shapeless frames are ignored — progress pills are cosmetic; `output` is truth).
  * @param {string} event @param {unknown} data @returns {string | null} */
@@ -208,7 +230,14 @@ function extractProgress(event, data) {
   const d = /** @type {Record<string, unknown>} */ (data);
   const str = (/** @type {unknown} */ v) => (typeof v === "string" && v.trim() ? v.trim() : null);
   const tool = str(d.tool) ?? str(d.name);
-  if (tool) return `· ${tool}`.slice(0, 240);
+  if (tool) {
+    // Self-improvement is the headline reason Hermes is worth it — make it visible. When Hermes
+    // grows its OWN brain (skill_manage / memory tools → ~/.hermes, never our code), surface a
+    // plain-language line instead of the bare tool name so you can watch it get smarter.
+    const learned = describeSelfImprovement(tool);
+    if (learned) return learned.slice(0, 240);
+    return `· ${tool}`.slice(0, 240);
+  }
   const msg = str(d.message) ?? str(d.summary) ?? str(d.status);
   if (msg) return msg.slice(0, 240);
   // A named lifecycle event with no payload text — surface the event name, not raw token deltas.

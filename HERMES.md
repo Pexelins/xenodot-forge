@@ -25,11 +25,10 @@ npm run hermes:setup
 
 This installs Hermes if it's missing, turns the local API server on in `~/.hermes/.env`
 (generating the `API_SERVER_KEY` for you), **sets the provider and restricts the toolset
-directly** via `hermes config set`, registers the Hive-side **MCP callback** so Hermes can report
-progress + findings back to your UI (`mcp_servers.xenodot`), installs the Xenodot "partner" persona
-into `~/.hermes/SOUL.md` (only if it's absent or the stock template — a customized SOUL is never
-overwritten; source: `ui/server/integrations/hermes/hermes-soul.md`), echoes what Hermes persisted, and wires
-Xenodot's config.
+directly** via `hermes config set`, installs the Xenodot "partner" persona into `~/.hermes/SOUL.md`
+(only if it's absent or the stock template — a customized SOUL is never overwritten; source:
+`ui/server/integrations/hermes/hermes-soul.md`), strips any stale `mcp_servers.xenodot` callback
+left by older Xenodot versions, echoes what Hermes persisted, and wires Xenodot's config.
 It **never launches an interactive Hermes command** (`hermes setup`/`model`/`tools`) — those
 pickers are exactly what trap you. Flags:
 
@@ -42,13 +41,15 @@ npm run hermes:setup -- --reset                            # undo the setup (tes
 ```
 
 `--reset` removes Xenodot's `hermes` block, the `API_SERVER_*` lines from `~/.hermes/.env`,
-and the toolset edits in `config.yaml` (back to `hermes-cli`). It leaves Hermes itself, your
+and the `platform_toolsets.api_server` edit in `config.yaml`. It leaves Hermes itself, your
 model/provider and Portal auth untouched — so you can re-run setup on a clean slate.
 
-Defaults: **Nous via Portal**, toolset `web, search, memory` — read-only research with **no machine
-access** (no `terminal`/`file`/`code_execution`/`skills`; see "Restrict the toolset" below for why
-this one line is the whole guardrail). Two things it leaves to you: the Nous Portal sign-in (a
-browser OAuth — run `hermes portal open`, _not_ the wizard) and leaving `hermes gateway` running.
+Defaults: **Nous via Portal**, toolset `web, search, memory, skills` — research plus Hermes' **own
+brain** (`memory` + `skills` self-improvement), and **no machine access** (no
+`terminal`/`file`/`code_execution`/`browser`; see "Restrict the toolset" and "Self-improvement"
+below for why that one line is the whole guardrail). Two things it leaves to you: the Nous Portal
+sign-in (a browser OAuth — run `hermes portal open`, _not_ the wizard) and leaving `hermes gateway`
+running.
 
 > **Got stuck in `hermes setup` (or `--portal`) before?** Hit **Ctrl+C**. You never need that
 > wizard — the script sets every value non-interactively. For Portal auth use `hermes portal`,
@@ -106,25 +107,54 @@ it reads **`platform_toolsets.api_server`**, and with no entry there it defaults
 
 ```yaml
 platform_toolsets:
-  api_server: [web, search, memory, xenodot] # read-only research + the `xenodot` report-back MCP
-  # server (an RPC to your UI, NOT machine access); still NO terminal/file/code on your machine
+  api_server: [web, search, memory, skills] # research + Hermes' OWN brain (memory + self-evolving
+  # skills, written to ~/.hermes — NOT your code); still NO terminal/file/code on your machine
 ```
 
-`npm run hermes:setup` writes exactly this (default `web, search, memory`). Widen only if you
-knowingly want machine access: `--toolsets=web,search,memory,terminal,file`. Individual toolsets:
-`web, search, terminal, file, browser, vision, image_gen, skills, todo, tts, cronjob, moa`.
+`npm run hermes:setup` writes exactly this (default `web, search, memory, skills`). Widen only if
+you knowingly want machine access: `--toolsets=web,search,memory,skills,terminal,file`. Individual
+toolsets: `web, search, memory, skills, terminal, file, browser, vision, image_gen, todo, tts,
+cronjob, moa`. `memory` + `skills` are self-improvement (see below) and stay on your machine inside
+`~/.hermes`; `terminal`/`file`/`code_execution`/`browser` are the ones that could touch the game or
+this framework, so they stay off.
 
 **Confirm what's actually live** (the only sure check) — `npm run hermes:check` queries the
 gateway's `GET /v1/toolsets` and prints the enabled tools, loudly flagging any machine-access ones:
 
 ```
-API-path tools enabled: web, memory
+API-path tools enabled: web, search, memory, skills
 ✓ no machine-access tools (terminal/file/code) on the API path.
 ```
+
+(`memory` and `skills` are Hermes' own brain, not machine access — the check only flags
+`terminal`/`file`/`code_execution`/`browser`.)
 
 Avoid `agent.disabled_toolsets` — a known bug
 ([#33924](https://github.com/NousResearch/hermes-agent/issues/33924)) can make a bundle name
 there silently kill _all_ tools on the gateway path.
+
+## Self-improvement: Hermes' own brain, not your code
+
+Hermes' headline feature is **self-improvement** — after a non-trivial task it writes/updates its
+own reusable **skills** (`skill_manage` → `~/.hermes/skills/`) and a background review refreshes its
+**memory** (`MEMORY.md`, `USER.md`). We leave both on (`memory` + `skills` in the toolset above) on
+purpose: the more Hermes researches for this team, the better it gets at it. You'll see
+`🧠 Hermes is updating its own skills/memory` lines in the activity feed when it happens.
+
+**Two separate spheres — this is the whole guardrail.**
+
+- **Hermes' brain** (`~/.hermes/skills`, `~/.hermes/MEMORY.md`) — Hermes grows this freely. It's
+  _its_ procedural/episodic memory, not yours.
+- **Your project** (the game + this framework) — Hermes **never** touches it. The toolsets that
+  could (`terminal`/`file`/`code_execution`/`browser`) stay **off**, so Hermes physically cannot
+  edit, build, or write your files. Adopting anything Hermes _found_ into your project is a
+  separate, human-gated step: a `xenodot:*-researcher` writes the verdict + `plugin/library/` entry,
+  you approve, and `promote` globalizes it. Hermes self-improving and your codebase changing are
+  **different things**, and only the second one is gated by you.
+
+The trade-off we accept: Hermes' brain and our `plugin/library` drift apart over time ("two
+brains"). That's fine here — Hermes investigates, humans adopt; nothing Hermes "learns" reaches your
+project except through the researcher → library → promote gate.
 
 ## Step 2 — point Xenodot at it
 
@@ -150,15 +180,11 @@ Start a session and give the Hive a **capability / tooling / knowledge-gap** tas
 (e.g. _"research the best Godot 4 approach for X"_) — optionally naming a persona ("have the
 **critic** stress-test …"). When the Hive calls `mcp__ui__hermes`, **approve it in the permission
 gate**. It's **fire-and-forget**: the call returns at once and you keep working — Hermes runs in
-the background, streams progress to the feed (the **Hermes** lines, colored per persona), and when
-it's done **calls back** to deliver its findings as a new message. The Hive then hands those to the
-matching `xenodot:*-researcher` → your adopt/reject verdict. If Hermes is off or unreachable, the
-Hive just dispatches the researcher itself — same result, no Hermes.
-
-> **Startup order matters.** Hermes discovers MCP servers (its report-back channel) at gateway
-> startup, and that channel is served by the UI. So bring the **UI up first**: `npm start` serves
-> `/mcp` _and_ auto-starts the gateway in the right order. If you run `hermes gateway` yourself,
-> (re)start it **after** `npm start` is up, or the report-back tools won't be available to the run.
+the background and a watcher streams progress to the feed (the **Hermes** lines, colored per
+persona). There is **no callback**: when the run finishes, the watcher **reads** the result from the
+runs API (`GET /v1/runs/{id}`) and delivers it as a new message. The Hive then hands those findings
+to the matching `xenodot:*-researcher` → your adopt/reject verdict. If Hermes is off, unreachable,
+or the run fails/times out, the Hive just dispatches the researcher itself — same result, no Hermes.
 
 ## Can I install Hermes from the UI?
 
