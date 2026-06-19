@@ -220,11 +220,17 @@ function foldResult(s, m) {
   const u = m.usage ?? {};
   const hasForeground = s.running.some((r) => !r.background);
   const cost = (m.total_cost_usd ?? 0).toFixed(3);
+  // Per-turn `result.usage` accumulated into a session ledger. Cache classes
+  // usually dwarf raw input/output, so dropping them (as before) under-reported
+  // the meter by an order of magnitude — count all four.
   return {
     ...s,
     usage: {
       cost: s.usage.cost + (m.total_cost_usd ?? 0),
-      tokens: s.usage.tokens + (u.input_tokens ?? 0) + (u.output_tokens ?? 0),
+      input: s.usage.input + (u.input_tokens ?? 0),
+      output: s.usage.output + (u.output_tokens ?? 0),
+      cacheCreate: s.usage.cacheCreate + (u.cache_creation_input_tokens ?? 0),
+      cacheRead: s.usage.cacheRead + (u.cache_read_input_tokens ?? 0),
     },
     busy: false,
     thinking: { active: false, label: "" },

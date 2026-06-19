@@ -52,7 +52,7 @@ import { reduce } from "./reducer.js";
  * @property {LogEntry[]} activity         - append-only (oldest first; the view prepends)
  * @property {Todo[]} todos                - replaced by each TodoWrite
  * @property {Thinking} thinking
- * @property {{ cost: number, tokens: number }} usage
+ * @property {{ cost: number, input: number, output: number, cacheCreate: number, cacheRead: number }} usage - per-session run ledger; local SDK-reported estimate, not billing-accurate
  * @property {{ open: boolean }} connection
  * @property {{ model: string, status: string, contextPct?: number, contextTokens?: number, contextMax?: number }} session
  * @property {Record<string, { pct?: number, status?: string, resetsAt?: number }>} rateLimit - claude.ai plan utilization, keyed by window (five_hour | seven_day | …)
@@ -71,7 +71,7 @@ export function initialState() {
     activity: [],
     todos: [],
     thinking: { active: false, label: "" },
-    usage: { cost: 0, tokens: 0 },
+    usage: { cost: 0, input: 0, output: 0, cacheCreate: 0, cacheRead: 0 },
     connection: { open: false },
     session: { model: "", status: "" },
     rateLimit: {},

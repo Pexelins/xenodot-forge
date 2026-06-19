@@ -3359,6 +3359,25 @@ input.cmd::placeholder {
   font-size: 10px;
   color: var(--text-3);
 }
+.tokens-session-breakdown {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--text-3);
+  opacity: 0.75;
+}
+.tokens-session-current {
+  background: var(--panel-2);
+}
+.tokens-session-current .tokens-session-name {
+  color: var(--accent, var(--text-1));
+}
+.tokens-note {
+  padding: 8px 14px 4px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--text-3);
+}
 .tokens-refresh {
   align-self: flex-end;
   margin: 0 14px 4px;

@@ -54,7 +54,7 @@
  * @property {string} [subagent_type] - sub-agent label on messages it produced
  * @property {number} [total_cost_usd]
  * @property {number} [duration_ms]
- * @property {{ input_tokens?: number, output_tokens?: number }} [usage]
+ * @property {{ input_tokens?: number, output_tokens?: number, cache_creation_input_tokens?: number, cache_read_input_tokens?: number }} [usage]
  * @property {{ status?: string, utilization?: number, rateLimitType?: string, resetsAt?: number }} [rate_limit_info] - rate_limit_event: claude.ai plan utilization
  * @property {{ content?: ContentBlock[] }} [message]
  * @property {string} [task_id] - background-task lifecycle events (task_started/updated/notification)

@@ -108,13 +108,23 @@ check("result clears foreground chips, keeps background, folds usage and busy", 
       type: "result",
       subtype: "success",
       total_cost_usd: 0.25,
-      usage: { input_tokens: 100, output_tokens: 50 },
+      usage: {
+        input_tokens: 100,
+        output_tokens: 50,
+        cache_creation_input_tokens: 200,
+        cache_read_input_tokens: 4000,
+      },
     },
   });
   assert.equal(s.running.length, 1);
   assert.equal(s.running[0]?.background, true);
   assert.equal(s.busy, false);
-  assert.equal(s.usage.tokens, 150);
+  // All four token classes are folded — cache reads included, not just in/out.
+  assert.equal(s.usage.input, 100);
+  assert.equal(s.usage.output, 50);
+  assert.equal(s.usage.cacheCreate, 200);
+  assert.equal(s.usage.cacheRead, 4000);
+  assert.equal(s.usage.cost, 0.25);
 });
 
 check("idle clears busy + every running chip (the stuck-running backstop)", () => {

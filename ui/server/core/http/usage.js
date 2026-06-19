@@ -5,22 +5,29 @@ import { parseJSON } from "../../../lib/json.js";
 import { LOG_DIR } from "../config.js";
 
 /** @typedef {{ input_tokens?: number, output_tokens?: number, cache_creation_input_tokens?: number, cache_read_input_tokens?: number }} TokenUsage */
-/** @typedef {{ message?: { usage?: TokenUsage } }} LogLine */
+/** @typedef {{ message?: { usage?: TokenUsage, total_cost_usd?: number } }} LogLine */
 
 /**
+ * Aggregate one session's NDJSON log. `message.usage` here matches the SDK
+ * `result` event's top-level cumulative-per-turn usage (assistant-event usage
+ * lives deeper at message.message.usage and isn't picked up), so summing across
+ * lines yields the session total without double counting. `total_cost_usd` is
+ * the SDK's own per-turn cost estimate.
  * @param {string} file
- * @returns {{ input: number, output: number, cacheCreate: number, cacheRead: number }}
+ * @returns {{ input: number, output: number, cacheCreate: number, cacheRead: number, cost: number }}
  */
 function parseSession(file) {
   let input = 0,
     output = 0,
     cacheCreate = 0,
-    cacheRead = 0;
+    cacheRead = 0,
+    cost = 0;
   try {
     for (const line of readFileSync(file, "utf8").split("\n")) {
       if (!line) continue;
       try {
         const obj = /** @type {LogLine} */ (parseJSON(line));
+        cost += obj.message?.total_cost_usd ?? 0;
         const u = obj.message?.usage;
         if (!u) continue;
         input += u.input_tokens ?? 0;
@@ -30,16 +37,16 @@ function parseSession(file) {
       } catch {}
     }
   } catch {}
-  return { input, output, cacheCreate, cacheRead };
+  return { input, output, cacheCreate, cacheRead, cost };
 }
 
 /**
  * @returns {{
  *   sessionCount: number,
  *   totalCount: number,
- *   totals: { input: number, output: number, cacheCreate: number, cacheRead: number },
+ *   totals: { input: number, output: number, cacheCreate: number, cacheRead: number, cost: number },
  *   hitRate: number,
- *   topSessions: { name: string, input: number, output: number, cacheCreate: number, cacheRead: number, total: number }[]
+ *   topSessions: { name: string, input: number, output: number, cacheCreate: number, cacheRead: number, cost: number, total: number }[]
  * }}
  */
 export function computeUsage() {
@@ -51,13 +58,13 @@ export function computeUsage() {
     return {
       sessionCount: 0,
       totalCount: 0,
-      totals: { input: 0, output: 0, cacheCreate: 0, cacheRead: 0 },
+      totals: { input: 0, output: 0, cacheCreate: 0, cacheRead: 0, cost: 0 },
       hitRate: 0,
       topSessions: [],
     };
   }
 
-  /** @type {{ name: string, input: number, output: number, cacheCreate: number, cacheRead: number, total: number }[]} */
+  /** @type {{ name: string, input: number, output: number, cacheCreate: number, cacheRead: number, cost: number, total: number }[]} */
   const sessions = [];
   for (const f of files) {
     const s = parseSession(path.join(LOG_DIR, f));
@@ -73,8 +80,9 @@ export function computeUsage() {
       output: acc.output + s.output,
       cacheCreate: acc.cacheCreate + s.cacheCreate,
       cacheRead: acc.cacheRead + s.cacheRead,
+      cost: acc.cost + s.cost,
     }),
-    { input: 0, output: 0, cacheCreate: 0, cacheRead: 0 },
+    { input: 0, output: 0, cacheCreate: 0, cacheRead: 0, cost: 0 },
   );
 
   const hitRate =

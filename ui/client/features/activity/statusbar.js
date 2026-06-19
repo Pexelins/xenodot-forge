@@ -90,8 +90,17 @@ export function initStatusbar() {
     paintPlanUsage(rl);
   });
   subscribe("usage", (u) => {
-    if (u.cost > 0 || u.tokens > 0) {
-      $("usage").textContent = `$${u.cost.toFixed(2)} · ${(u.tokens / 1000).toFixed(1)}k tok`;
+    // Total session consumption = every token class the SDK billed this session,
+    // cache included. Cache reads usually dominate, so this is what the app meter
+    // reflects — the prior input+output-only figure read far too low.
+    const total = u.input + u.output + u.cacheCreate + u.cacheRead;
+    if (u.cost > 0 || total > 0) {
+      const el = $("usage");
+      el.textContent = `$${u.cost.toFixed(2)} · ${(total / 1000).toFixed(1)}k tok`;
+      const k = (/** @type {number} */ n) => `${Math.round(n / 1000)}k`;
+      el.title =
+        `session consumption (local estimate) — ` +
+        `in ${k(u.input)} · out ${k(u.output)} · cache write ${k(u.cacheCreate)} · cache read ${k(u.cacheRead)}`;
     }
   });
   // The Xenodot mark breathes its machine-spirit glow while the hive works a

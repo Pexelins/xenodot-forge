@@ -116,7 +116,7 @@ function tokensKv(key, val, extraCls) {
  * @param {HTMLElement} tree */
 async function renderTokens(tree) {
   tree.append(el("div", "tree-empty", "loading…"));
-  /** @type {{ sessionCount: number, totalCount: number, totals: { input: number, output: number, cacheCreate: number, cacheRead: number }, hitRate: number, topSessions: { name: string, input: number, output: number, cacheCreate: number, cacheRead: number, total: number }[] }} */
+  /** @type {{ sessionCount: number, totalCount: number, totals: { input: number, output: number, cacheCreate: number, cacheRead: number, cost: number }, hitRate: number, topSessions: { name: string, input: number, output: number, cacheCreate: number, cacheRead: number, cost: number, total: number }[] }} */
   let data;
   try {
     data = /** @type {any} */ (await fetchJSON("/api/usage"));
@@ -140,33 +140,50 @@ async function renderTokens(tree) {
   wrap.append(tokensKv("cache hit rate", `${data.hitRate}%`, "tokens-hit"));
   wrap.append(el("hr", "tokens-divider"));
 
-  // Token breakdown
+  // Token breakdown (all sessions) + the SDK's own cost estimate
   wrap.append(tokensKv("input", fmtTokens(data.totals.input)));
   wrap.append(tokensKv("output", fmtTokens(data.totals.output)));
   wrap.append(tokensKv("cache write", fmtTokens(data.totals.cacheCreate)));
   wrap.append(tokensKv("cache read", fmtTokens(data.totals.cacheRead)));
+  wrap.append(tokensKv("cost", `$${data.totals.cost.toFixed(2)}`, "tokens-hit"));
   wrap.append(el("hr", "tokens-divider"));
   wrap.append(tokensKv("sessions", `${data.sessionCount} / ${data.totalCount}`));
 
-  // Top sessions
+  // Top sessions — full per-session consumption; mark the newest as the current run.
   if (data.topSessions.length) {
+    const current = data.topSessions.reduce((a, b) => (b.name > a.name ? b : a)).name;
     wrap.append(el("hr", "tokens-divider"));
     wrap.append(el("div", "tokens-section-head", "top sessions"));
     data.topSessions.forEach((s) => {
-      const item = el("div", "tokens-session");
+      const item = el(
+        "div",
+        "tokens-session" + (s.name === current ? " tokens-session-current" : ""),
+      );
       const parts = s.name.match(/(\d{2})-(\d{2})T(\d{2})-(\d{2})/);
-      const label = parts ? `${parts[1]}-${parts[2]} ${parts[3]}:${parts[4]}` : s.name.slice(0, 16);
+      const stamp = parts ? `${parts[1]}-${parts[2]} ${parts[3]}:${parts[4]}` : s.name.slice(0, 16);
+      const label = s.name === current ? `${stamp} · current` : stamp;
       item.append(el("span", "tokens-session-name", label));
       item.append(
-        el(
-          "span",
-          "tokens-session-meta",
-          `out ${fmtTokens(s.output)} · cR ${fmtTokens(s.cacheRead)}`,
-        ),
+        el("span", "tokens-session-meta", `${fmtTokens(s.total)} tok · $${s.cost.toFixed(2)}`),
       );
+      const breakdown = el(
+        "span",
+        "tokens-session-breakdown",
+        `in ${fmtTokens(s.input)} · out ${fmtTokens(s.output)} · cW ${fmtTokens(s.cacheCreate)} · cR ${fmtTokens(s.cacheRead)}`,
+      );
+      item.append(breakdown);
       wrap.append(item);
     });
   }
+
+  // Honest framing: this is a local run ledger, not the billing source of truth.
+  wrap.append(
+    el(
+      "div",
+      "tokens-note",
+      "Local estimate from SDK-reported usage — not billing-accurate; cache and cross-device usage may drift from the app meter.",
+    ),
+  );
 
   tree.append(wrap);
 }
