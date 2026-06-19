@@ -13,8 +13,16 @@ import { makeAssetTool } from "../mcp-tools/asset-tool.js";
 import { makeAskTool } from "../mcp-tools/ask-tool.js";
 import { makePromoteTool } from "../mcp-tools/promote-tool.js";
 import { makeHermesTool, makeHermesFeedbackTool } from "../mcp-tools/hermes-tool.js";
+import { makeAutonomousTool } from "../mcp-tools/autonomous-tool.js";
+import { uiControlAllow } from "./ui-control.js";
+import { emitContextUsage } from "./stream.js";
 import { readPromotions, decide, markPromoted } from "../features/promotions/promotions-store.js";
 import { promoteOne } from "../features/promotions/promote-run.js";
+import { readAutonomous } from "../features/autonomous/autonomous-store.js";
+import {
+  handleAutonomousControl,
+  makeCheckLoop,
+} from "../features/autonomous/autonomous-control.js";
 import {
   readTasks,
   applyOp,
@@ -28,10 +36,6 @@ import {
   DEFAULT_POLICY,
   EDIT_TOOLS,
   FORM_TOOL,
-  TASK_TOOL,
-  ASSET_TOOL,
-  ASK_TOOL,
-  PROMOTE_TOOL,
   AUTO_ALLOW_TOOLS,
   MODEL,
   EFFORT,
@@ -55,6 +59,9 @@ import {
 /** @typedef {import("../../lib/types.js").Task} Task */
 /** @typedef {import("@anthropic-ai/claude-agent-sdk").SDKUserMessage} SDKUserMessage */
 /** @typedef {Map<number, { type: string, resolve: (value: Reply) => void }>} Pending */
+/** Per-connection mutable session state, shared between runSession and the client-message
+ * handlers. `autonomousLoop` is set by runSession once the check loop is built.
+ * @typedef {{ policy: string, query?: { interrupt?: () => Promise<void>, stopTask?: (taskId: string) => Promise<void> }, autonomousLoop?: { arm: (fireNow?: boolean) => void, disarm: () => void }, autonomousActive?: boolean }} SessionState */
 
 /** Per-connection NDJSON logger + the `send` that mirrors every outgoing
  * message into it. @param {import("ws").WebSocket} ws */
@@ -162,7 +169,7 @@ async function handleAskQuestion(input, agent, waitFor) {
 }
 
 /**
- * @param {{ session: { policy: string }, sessionAllowed: Set<string>, waitFor: WaitFor, log: (dir: string, obj: OutMsg) => void, agentByTool: Map<string, string>, formAgentQueue: string[] }} deps
+ * @param {{ session: SessionState, sessionAllowed: Set<string>, waitFor: WaitFor, log: (dir: string, obj: OutMsg) => void, agentByTool: Map<string, string>, formAgentQueue: string[] }} deps
  * @returns {import("@anthropic-ai/claude-agent-sdk").CanUseTool}
  */
 function makeCanUseTool({ session, sessionAllowed, waitFor, log, agentByTool, formAgentQueue }) {
@@ -180,26 +187,13 @@ function makeCanUseTool({ session, sessionAllowed, waitFor, log, agentByTool, fo
       formAgentQueue.push(agent);
       return { behavior: "allow", updatedInput: input };
     }
-    if (toolName === TASK_TOOL) {
-      // UI-control tool: mutates the task board, never pauses — auto-allow.
-      // Stamp the calling agent (`_by`) so the server can deterministically close
-      // this agent's open tasks when it finishes (see closeOpenByAgent). The
-      // server overrides any model-supplied `_by`.
-      return { behavior: "allow", updatedInput: { ...input, _by: agent } };
-    }
-    if (toolName === ASSET_TOOL) {
-      // UI-control tool: files a user-owned asset request, never pauses — auto-allow.
+    // UI-control tools (tasks/ask/promote/asset/autonomous): auto-allow, never pause.
+    const uiAllow = uiControlAllow(toolName, input, agent);
+    if (uiAllow) return uiAllow;
+    if (session.autonomousActive) {
+      // hive self-drives — auto-allow all tools
+      log("auto", { type: "permission", toolName, policy: "autonomous" });
       return { behavior: "allow", updatedInput: input };
-    }
-    if (toolName === ASK_TOOL) {
-      // UI-control tool: files an async question on the board, never pauses —
-      // auto-allow. Stamp the calling agent (`_by`) so the question owner is known.
-      return { behavior: "allow", updatedInput: { ...input, _by: agent } };
-    }
-    if (toolName === PROMOTE_TOOL) {
-      // UI-control tool: files a promotion request, never pauses — auto-allow.
-      // Stamp the requesting agent (`_by`) for the record.
-      return { behavior: "allow", updatedInput: { ...input, _by: agent } };
     }
     if (
       session.policy === "all" ||
@@ -353,30 +347,26 @@ function settleAllBackground({ bgBoard, runningByTask, send }) {
   }
 }
 
-/** Read the session's live context-window usage and push it to the UI meter.
- * Best-effort: getContextUsage is a streaming-mode control request and can throw
- * if the turn raced the session teardown — a missing meter update is harmless, so
- * swallow errors rather than killing the message loop.
- * @param {{ getContextUsage?: () => Promise<{ totalTokens: number, maxTokens: number, percentage: number }> }} q
- * @param {(obj: OutMsg) => void} send */
-async function emitContextUsage(q, send) {
-  try {
-    const u = await q.getContextUsage?.();
-    if (!u) return;
-    send({
-      type: "context",
-      percentage: u.percentage,
-      totalTokens: u.totalTokens,
-      maxTokens: u.maxTokens,
-    });
-  } catch {
-    // session ended or control request unsupported — skip this meter update
+/** Stream the SDK query's messages to the browser, keeping the autonomous check loop's
+ * turn-busy flag in sync (assistant output = mid-turn, `result` = turn done → also refresh
+ * the context meter). Extracted from runSession to keep it under the per-function cap.
+ * @param {Awaited<ReturnType<typeof query>>} q
+ * @param {{ send: (obj: OutMsg) => void, trackDeps: Parameters<typeof trackMessage>[1], busy: { value: boolean } }} deps */
+async function streamQuery(q, { send, trackDeps, busy }) {
+  for await (const message of q) {
+    trackMessage(message, trackDeps);
+    send({ type: "event", message });
+    if (message.type === "assistant") busy.value = true;
+    if (message.type === "result") {
+      busy.value = false;
+      void emitContextUsage(q, send);
+    }
   }
 }
 
 /**
  * Drive the Claude Code session and stream its messages to the browser.
- * @param {{ resumeId: string | null, policy: string, inbox: ReturnType<typeof createInbox>, send: (obj: OutMsg) => void, canUseTool: import("@anthropic-ai/claude-agent-sdk").CanUseTool, abort: AbortController, waitFor: WaitFor, agentByTool: Map<string, string>, formAgentQueue: string[], session: { policy: string, query?: { interrupt?: () => Promise<void>, stopTask?: (taskId: string) => Promise<void> } } }} deps
+ * @param {{ resumeId: string | null, policy: string, inbox: ReturnType<typeof createInbox>, send: (obj: OutMsg) => void, canUseTool: import("@anthropic-ai/claude-agent-sdk").CanUseTool, abort: AbortController, waitFor: WaitFor, agentByTool: Map<string, string>, formAgentQueue: string[], session: SessionState }} deps
  */
 function runSession({
   resumeId,
@@ -396,12 +386,21 @@ function runSession({
   const bgBoard = new Map(); // sdk task_id -> bridged board task id
   /** @type {Map<string, string>} */
   const runningByTask = new Map(); // sdk task_id -> subagent_type (in-flight sub-agents)
+  // `busy.value` lets the check loop skip ticks mid-turn; stash loop on session
+  // so the control handler + autonomous tool can arm/disarm it.
+  const busy = { value: false };
+  const checkLoop = makeCheckLoop({ push: inbox.push, send, isBusy: () => busy.value });
+  session.autonomousLoop = checkLoop;
   void (async () => {
     try {
       send({ type: "policy", value: policy });
-      // Paint the persisted task board + promotions board immediately (fresh or resumed).
       send({ type: "tasks", tasks: readTasks() });
       send({ type: "promotions", items: readPromotions() });
+      // Repaint the Autonomous flag + re-arm the check loop if a goal survived the reconnect.
+      const autoState = readAutonomous();
+      send({ type: "autonomousMode", payload: autoState });
+      // fireNow=true on resume: first interval tick is 5 min away
+      checkLoop.arm((session.autonomousActive = autoState.active));
       if (resumeId) {
         send({ type: "history", items: sessionHistory(resumeId) });
         send({ type: "status", text: `resumed session ${resumeId.slice(0, 8)}…` });
@@ -486,30 +485,26 @@ function runSession({
                 makePromoteTool(send),
                 makeHermesTool(send, inbox.push),
                 makeHermesFeedbackTool(send),
+                makeAutonomousTool(send, checkLoop.disarm),
               ],
             }),
           },
         },
       });
       session.query = q;
-      for await (const message of q) {
-        trackMessage(message, { agentByTool, bgSpawns, bgBoard, runningByTask, send });
-        send({ type: "event", message });
-        // Turn ended — read the live context-window usage and push it to the UI's
-        // session meter, so the user can see the orchestrator transcript growing and
-        // compact/reset before it gets expensive (each turn re-reads the whole prefix).
-        if (message.type === "result") void emitContextUsage(q, send);
-      }
+      await streamQuery(q, {
+        send,
+        trackDeps: { agentByTool, bgSpawns, bgBoard, runningByTask, send },
+        busy,
+      });
       send({ type: "status", text: "session ended" });
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err);
       send({ type: "status", text: `session error: ${reason}` });
     } finally {
-      // Every exit path lands here — normal end, an SDK error, or the iterator
-      // ending early. The client clears `busy` and the running strip only on a
-      // `result` event; an abnormal turn/session end never emits one, leaving the
-      // UI stuck on "agent running". Settle dead background workers off the board,
-      // then signal idle so the client clears busy + every chip.
+      // Every exit path lands here — normal end, SDK error, or early iterator end. The
+      // client clears `busy`/the running strip only on a `result`; an abnormal end emits
+      // none, so settle dead background workers and signal idle to unstick the UI.
       settleAllBackground({ bgBoard, runningByTask, send });
       send({ type: "idle" });
     }
@@ -633,7 +628,7 @@ function handleClientMessage(raw, { log, send, inbox, pending, session }) {
  * the turn), stop_task (kill one background worker). Split out of handleClientMessage
  * to keep its branch complexity in check.
  * @param {ClientMsg} msg
- * @param {{ send: (obj: OutMsg) => void, inbox: ReturnType<typeof createInbox>, session: { query?: { interrupt?: () => Promise<void>, stopTask?: (taskId: string) => Promise<void> } } }} deps */
+ * @param {{ send: (obj: OutMsg) => void, inbox: ReturnType<typeof createInbox>, session: SessionState }} deps */
 function handleControlMessage(msg, { send, inbox, session }) {
   if (msg.type === "compact") {
     // Trim the orchestrator's transcript in place: push the /compact slash command
@@ -659,6 +654,11 @@ function handleControlMessage(msg, { send, inbox, session }) {
     // background workers keep running. The SDK emits a task_notification:stopped.
     void session.query?.stopTask?.(msg.taskId);
     send({ type: "status", text: `stopping background agent ${msg.taskId}…` });
+  } else if (session.autonomousLoop) {
+    // Toggle the standing Main Goal (start/stop) — persists, broadcasts the flag, pushes
+    // the kickoff turn, and arms/disarms the 5-minute check loop. No-op for any other msg.
+    if (handleAutonomousControl(msg, { send, push: inbox.push, loop: session.autonomousLoop }))
+      session.autonomousActive = /** @type {{ action: string }} */ (msg).action === "start";
   }
 }
 
@@ -687,7 +687,7 @@ export function handleConnection(ws, req) {
   const inbox = createInbox();
   /** @type {Pending} */
   const pending = new Map();
-  /** @type {{ policy: string, query?: { interrupt?: () => Promise<void>, stopTask?: (taskId: string) => Promise<void> } }} */
+  /** @type {SessionState} */
   const session = { policy: DEFAULT_POLICY };
   /** @type {Set<string>} */
   const sessionAllowed = new Set(); // tools approved with "Always" this session
@@ -723,6 +723,8 @@ export function handleConnection(ws, req) {
     handleClientMessage(raw, { log, send, inbox, pending, session });
   });
   ws.on("close", () => {
+    // Stop the check loop so it never pushes into a closed inbox or writes for a dead session.
+    session.autonomousLoop?.disarm();
     handleClose({ inbox, pending, abort, endLog: end });
   });
 }

@@ -216,6 +216,13 @@ export const ASK_TOOL = "mcp__ui__ask";
 // move happens later via `npm run promote`), so it bypasses the permission policy.
 export const PROMOTE_TOOL = "mcp__ui__promote";
 
+// In-process MCP tool the orchestrator calls to report on the standing Main Goal
+// (Autonomous Mode): op "progress" stamps a one-line status, "complete" files the
+// final report and turns the loop off, "pause" stops it. Like the other UI-control
+// tools it only mutates local state + broadcasts (no real side effect), so it
+// bypasses the permission policy.
+export const AUTONOMOUS_TOOL = "mcp__ui__autonomous";
+
 // In-process MCP tool the HIVE (orchestrator main loop) calls to delegate the heavy
 // investigation half of research to an external Hermes Agent. Unlike the UI-control
 // tools above it is a REAL side effect (a billable network call), so it deliberately

@@ -3,6 +3,7 @@
 // what it can. HTML is intentionally left out so index.html's hand-tuned
 // markup isn't reflowed.
 export default {
-  "**/*.js": ["eslint --max-warnings 0 --fix", "prettier --write"],
+  // --no-warn-ignored: ESLint silently skips .claude/workflows/ (Workflow DSL runtime).
+  "**/*.js": ["eslint --max-warnings 0 --no-warn-ignored --fix", "prettier --write"],
   "**/*.{json,md,css}": ["prettier --write"],
 };

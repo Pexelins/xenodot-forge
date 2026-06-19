@@ -423,6 +423,72 @@ body.resizing iframe {
   background: var(--amber);
 }
 
+/* Autonomous Mode flag in the top bar — dim when off, Forge-green + pulsing when on */
+.auto-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.auto-pill:hover {
+  border-color: var(--accent-border);
+  color: var(--text-2);
+}
+
+.auto-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-3);
+  flex: none;
+}
+
+.auto-pill.on {
+  color: var(--accent-text);
+  background: var(--accent-dim);
+  border-color: var(--accent-border);
+}
+
+.auto-pill.on .auto-dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 70%, transparent);
+  animation: auto-pulse 1.8s ease-out infinite;
+}
+
+@keyframes auto-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 60%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* The current-state line inside the Autonomous modal */
+.auto-state {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-2);
+  margin-bottom: 10px;
+  min-height: 14px;
+}
+
+.auto-state.on {
+  color: var(--accent-text);
+}
+
 .usage {
   display: flex;
   align-items: center;

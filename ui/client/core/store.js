@@ -57,6 +57,7 @@ import { reduce } from "./reducer.js";
  * @property {{ model: string, status: string, contextPct?: number, contextTokens?: number, contextMax?: number }} session
  * @property {Record<string, { pct?: number, status?: string, resetsAt?: number }>} rateLimit - claude.ai plan utilization, keyed by window (five_hour | seven_day | …)
  * @property {boolean} busy                - hive MAIN turn in flight (drives the composer button)
+ * @property {import("../../lib/types.js").Autonomous} autonomousMode - the standing Main Goal + ON/OFF flag (header badge)
  */
 
 /** @returns {State} */
@@ -76,6 +77,16 @@ export function initialState() {
     session: { model: "", status: "" },
     rateLimit: {},
     busy: false,
+    autonomousMode: {
+      active: false,
+      goal: "",
+      intervalMs: 300000,
+      startedAt: null,
+      lastCheckAt: null,
+      checks: 0,
+      status: null,
+      report: null,
+    },
   };
 }
 

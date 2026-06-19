@@ -67,6 +67,7 @@ function handleMessage(ev) {
     case "permission_denied":
     case "context":
     case "hermes":
+    case "autonomousMode":
     case "idle":
       break; // fully handled by the store
   }

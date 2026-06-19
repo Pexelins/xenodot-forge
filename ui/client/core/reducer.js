@@ -53,6 +53,8 @@ export function reduce(s, msg) {
       };
     case "hermes":
       return foldHermes(s, msg);
+    case "autonomousMode":
+      return { ...s, autonomousMode: msg.payload }; // SNAPSHOT — replace
     case "event":
       return reduceEvent(s, msg.message);
     default:

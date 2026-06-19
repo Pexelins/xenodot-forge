@@ -112,6 +112,20 @@
  * @property {string} at - ISO timestamp of the last state change
  */
 
+// ---------- Autonomous Mode ----------
+/** A standing "Main Goal" the hive self-drives toward, with a recurring check loop.
+ * Persisted in .xenodot/autonomous.json; mirrored to the client store for the header flag.
+ * @typedef {object} Autonomous
+ * @property {boolean} active        - the ON/OFF flag the header badge reflects
+ * @property {string} goal           - the Main Goal text
+ * @property {number} intervalMs     - check cadence (default 5 min)
+ * @property {string | null} startedAt   - ISO when turned on
+ * @property {string | null} lastCheckAt - ISO of the last check tick
+ * @property {number} checks         - how many check ticks have fired
+ * @property {string | null} status  - "running" | "paused" | "complete" | latest progress note
+ * @property {string | null} report  - final report once the goal is judged met
+ */
+
 // ---------- WebSocket messages ----------
 /** @typedef {{ role: "user" | "assistant", text: string }} HistoryItem */
 /**
@@ -129,6 +143,7 @@
  *   | { type: "permission_denied", toolName: string, agent?: string, reason?: string, background?: boolean }
  *   | { type: "context", percentage: number, totalTokens: number, maxTokens: number }
  *   | { type: "hermes", phase: "start" | "progress" | "done", runId?: string, text: string, persona?: string }
+ *   | { type: "autonomousMode", payload: Autonomous }
  *   | { type: "idle" }
  * )} ServerMsg */
 
@@ -152,6 +167,7 @@
  *   | { type: "stop" }
  *   | { type: "stop_task", taskId: string }
  *   | { type: "compact" }
+ *   | { type: "autonomous_mode", action: "start" | "stop", goal?: string }
  * )} ClientMsg */
 /** Pauses the session, sends the prompt, resolves when the browser replies.
  * @typedef {(type: string, payload: Record<string, unknown>) => Promise<Reply>} WaitFor */
