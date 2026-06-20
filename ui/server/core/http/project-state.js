@@ -6,6 +6,7 @@ import {
   PROJECT_DIR,
   PROJECT_FOUND,
   ENGINE,
+  DOMAIN,
   FRAMEWORK_PLUGIN_DIR,
   hermesPublicConfig,
   codexPublicConfig,
@@ -109,8 +110,8 @@ export function projectState() {
         } catch {}
         return { path: f, title: firstHeading(full), verdict };
       }),
-    scenes: walk(dir, [".tscn"], [], dir),
-    scripts: walk(dir, [".gd"], [], dir),
+    scenes: walk(dir, DOMAIN.inventory.scenes, [], dir),
+    scripts: walk(dir, DOMAIN.inventory.scripts, [], dir),
     // Capabilities come from the xenodot plugin (the framework source); a game may also
     // carry its own unpromoted agents/skills in .claude/. Show both, plugin first.
     agents: collectAgents([

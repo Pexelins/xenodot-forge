@@ -1,0 +1,14 @@
+{
+  "name": "godot",
+  "label": "Godot",
+  "description": "Reference domain: build Godot-family (Godot / Redot / Blazium) games. Reproduces the framework's original behavior — selecting it changes nothing.",
+  "engine": {
+    "name": "godot",
+    "projectFile": "project.godot"
+  },
+  "inventory": {
+    "scenes": [".tscn"],
+    "scripts": [".gd"]
+  },
+  "starter": "starter"
+}

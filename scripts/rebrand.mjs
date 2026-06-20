@@ -24,6 +24,7 @@
 //   - Skips this codemod's own machinery + the whitelabel docs, which intentionally
 //     mention the literal "xenodot" and must not be rewritten.
 
+/* global process, console */
 import { readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, extname, sep } from "node:path";
 import { fileURLToPath } from "node:url";

@@ -11,9 +11,13 @@ import { existsSync, cpSync, readFileSync, appendFileSync, writeFileSync } from 
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolveActiveDomain } from "../core/domain-resolver.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url)); // ui/server/cli
 const FRAMEWORK_DIR = path.join(here, "..", "..", "..");
+// The active domain pack decides the project marker to detect and the starter to scaffold.
+// Default "godot" → project.godot + the existing starter/, so behavior is unchanged.
+const DOMAIN = resolveActiveDomain(FRAMEWORK_DIR);
 
 const argv = process.argv.slice(2);
 const target = path.resolve(
@@ -54,11 +58,11 @@ function ensureIgnores(dir) {
 
 // 1. Scaffold the starter (project + thin CLAUDE.md + .claude/settings.json + .gitignore)
 //    into an empty/new target. An existing Godot project is kept and wired in place.
-if (!existsSync(path.join(target, "project.godot"))) {
-  cpSync(path.join(FRAMEWORK_DIR, "starter"), target, { recursive: true });
+if (!existsSync(path.join(target, DOMAIN.engine.projectFile))) {
+  cpSync(path.join(FRAMEWORK_DIR, DOMAIN.starter), target, { recursive: true });
   console.log(`new: scaffolded starter → ${target}`);
 } else {
-  console.log(`new: ${target} already has a project.godot — wiring it in place.`);
+  console.log(`new: ${target} already has a ${DOMAIN.engine.projectFile} — wiring it in place.`);
 }
 ensureIgnores(target);
 

@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseJSON } from "../../lib/json.js";
 import { resolveEngineBin } from "./engine-bin.js";
+import { loadDomain, DEFAULT_DOMAIN } from "./domain-resolver.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** The ui/ directory (this file lives in ui/server/core/). */
@@ -51,13 +52,23 @@ const args = process.argv.slice(2);
  * Read once: it carries both the saved project path and the engine block. */
 const SAVED = (() => {
   try {
-    return /** @type {{ projectDir?: string, engine?: EngineConfig, assetLibrary?: string, hermes?: HermesConfig }} */ (
+    return /** @type {{ projectDir?: string, domain?: string, engine?: EngineConfig, assetLibrary?: string, hermes?: HermesConfig }} */ (
       parseJSON(readFileSync(CONFIG_FILE, "utf8"))
     );
   } catch {
     return {};
   }
 })();
+
+/** The active target domain pack (see ui/server/core/domain-resolver.js). The spine reads
+ * per-domain values (engine/project marker, inventory extensions, starter) from this
+ * descriptor instead of hardcoding them. "godot" — the default — reproduces the framework's
+ * original behavior, so nothing changes until a domain is chosen. Selection (first hit wins):
+ * env XENODOT_DOMAIN → `.xenodot.json` `domain` → "godot". */
+export const DOMAIN = loadDomain(
+  process.env.XENODOT_DOMAIN ?? SAVED.domain ?? DEFAULT_DOMAIN,
+  FRAMEWORK_DIR,
+);
 
 /** Where the framework reads the game project from. The framework is
  * independent of the project: it points at this folder in place and never
@@ -81,15 +92,17 @@ export const PROJECT_DIR = resolveProjectDir();
  * forks share Godot's project format, scene files, GDScript and CLI, so swapping
  * the binary is the whole switch — see docs/engines.md. Resolution (first hit
  * wins): env (`ENGINE_NAME` / `ENGINE_PROJECT_FILE` / `ENGINE_BIN`) →
- * `.xenodot.json` `engine` field → Godot defaults.
+ * `.xenodot.json` `engine` field → the active domain's defaults (Godot for the
+ * default `godot` domain).
  *   - `projectFile`: on-disk marker used to detect a project. `project.godot` by
  *     default, which the forks also use, so detection works for them unchanged.
  *   - `bin`: optional engine executable the verify gate runs; when set it is
  *     exported to sessions as `$GODOT` (see session.js). Otherwise the game's
  *     `tools/validate.sh` resolves it from `$GODOT`/PATH. */
 export const ENGINE = {
-  name: process.env.ENGINE_NAME ?? SAVED.engine?.name ?? "godot",
-  projectFile: process.env.ENGINE_PROJECT_FILE ?? SAVED.engine?.projectFile ?? "project.godot",
+  name: process.env.ENGINE_NAME ?? SAVED.engine?.name ?? DOMAIN.engine.name,
+  projectFile:
+    process.env.ENGINE_PROJECT_FILE ?? SAVED.engine?.projectFile ?? DOMAIN.engine.projectFile,
   bin: process.env.ENGINE_BIN ?? SAVED.engine?.bin ?? null,
 };
 /** Capitalized engine name for UI/CLI copy, e.g. "Godot", "Redot", "Blazium". */
