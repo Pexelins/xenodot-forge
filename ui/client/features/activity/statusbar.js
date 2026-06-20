@@ -103,7 +103,7 @@ export function initStatusbar() {
         `in ${k(u.input)} · out ${k(u.output)} · cache write ${k(u.cacheCreate)} · cache read ${k(u.cacheRead)}`;
     }
   });
-  // The Xenodot mark breathes its machine-spirit glow while the hive works a
+  // The Xenomoon mark breathes its machine-spirit glow while the hive works a
   // turn, and settles when idle — the creature reacting to the forge.
   subscribe("busy", (busy) => {
     document.querySelector(".brand")?.classList.toggle("busy", Boolean(busy));

@@ -1,6 +1,6 @@
 # Engines — Godot, Redot, Blazium
 
-Xenodot Forge is built to be **as engine-agnostic as it can cheaply be**. Today
+Xenomoon Forge is built to be **as engine-agnostic as it can cheaply be**. Today
 that means the **Godot family**: stock Godot and its source-compatible forks,
 **Redot** and **Blazium**. Pick one, point the framework at its binary, and the
 whole pipeline — designer interview, `godot-dev` build, `godot-verify` gate, the
@@ -29,9 +29,9 @@ There are two seams, and both default to Godot:
 2. **The verify gate** (`tools/validate.sh`, the `godot-verify` skill) — runs the
    engine binary through the `$GODOT` convention.
 
-### Option A — configure it once (`.xenodot.json`)
+### Option A — configure it once (`.xenomoon.json`)
 
-`npm run setup` writes `.xenodot.json` (gitignored, in the framework root). Add an
+`npm run setup` writes `.xenomoon.json` (gitignored, in the framework root). Add an
 `engine` block beside the saved `projectDir`:
 
 ```json

@@ -18,7 +18,7 @@
 #     CLAUDE.md) remains a foreground, human-approved act (it falls through to the normal
 #     layer → prompts foreground, auto-denies in background, as documented).
 #   * Writes only under the game project (cwd), the framework library, or the shared
-#     asset library ($XENODOT_LIBRARY / $XENODOT_ASSET_LIBRARY). Anything else falls
+#     asset library ($XENOMOON_LIBRARY / $XENOMOON_ASSET_LIBRARY). Anything else falls
 #     through to the normal layer rather than being broadened.
 #
 # Reads the PreToolUse payload on stdin; emits an allow decision (exit 0) only on a match,
@@ -47,12 +47,12 @@ case "$fp" in
   *) allowed=1 ;; # relative → under the game project cwd
 esac
 if [ "$allowed" -eq 0 ]; then
-  for root in "$PWD" "$XENODOT_LIBRARY" "$XENODOT_ASSET_LIBRARY"; do
+  for root in "$PWD" "$XENOMOON_LIBRARY" "$XENOMOON_ASSET_LIBRARY"; do
     [ -n "$root" ] || continue
     case "$fp" in "$root"/*) allowed=1; break ;; esac
   done
 fi
 [ "$allowed" -eq 1 ] || exit 0
 
-jq -cn '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",permissionDecisionReason:"xenodot: sub-agent game/library edit (background-safe grant)"}}'
+jq -cn '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",permissionDecisionReason:"xenomoon: sub-agent game/library edit (background-safe grant)"}}'
 exit 0

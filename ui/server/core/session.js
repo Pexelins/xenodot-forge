@@ -182,7 +182,7 @@ function makeCanUseTool({ session, sessionAllowed, waitFor, log, agentByTool, fo
       // The tool handler does the waiting; hand it this call's agent (FIFO,
       // since canUseTool and the handler run 1:1 and order-aligned per tool).
       // Forms come only from FOREGROUND interview agents — backgrounded
-      // (autonomous) Xenodots never call mcp__ui__form (orchestrator rule), so
+      // (autonomous) Xenomoons never call mcp__ui__form (orchestrator rule), so
       // no two forms overlap and the FIFO stays 1:1 even with a worker in flight.
       formAgentQueue.push(agent);
       return { behavior: "allow", updatedInput: input };
@@ -415,8 +415,8 @@ function runSession({
           // The framework's agents/skills/hooks come from the plugin (single source
           // of truth), not from copies in the game — so the game folder stays pure.
           // Plugins load regardless of cwd. noMcp: the UI owns its MCP tools (below),
-          // so don't wire the plugin's own MCP. Capabilities namespace as `xenodot:`.
-          // The xenodot spine is always loaded. The OPTIONAL Codex reviewer is a SECOND local
+          // so don't wire the plugin's own MCP. Capabilities namespace as `xenomoon:`.
+          // The xenomoon spine is always loaded. The OPTIONAL Codex reviewer is a SECOND local
           // plugin (OpenAI's `codex-plugin-cc`, vendored on disk) appended ONLY when the user
           // enabled it AND it's actually been cloned — so a disabled/absent Codex changes
           // nothing. Gating is array inclusion: the SDK has no per-plugin enable flag, and
@@ -528,7 +528,7 @@ function runPromotion(id, send) {
   send({
     type: "status",
     text: result.ok
-      ? `Promoted ${entry.kind.replace(/s$/, "")} "${entry.name}" → framework plugin. Start a new session to load it as xenodot:${entry.name.replace(/\.md$/, "")}.`
+      ? `Promoted ${entry.kind.replace(/s$/, "")} "${entry.name}" → framework plugin. Start a new session to load it as xenomoon:${entry.name.replace(/\.md$/, "")}.`
       : `Couldn't promote "${entry.name}": ${result.msg}`,
   });
 }
@@ -650,7 +650,7 @@ function handleControlMessage(msg, { send, inbox, session }) {
     void session.query?.interrupt?.();
     send({ type: "status", text: "stopping the current turn — interrupting running agents…" });
   } else if (msg.type === "stop_task") {
-    // Stop ONE backgrounded Xenodot by its task id; the hive turn and any other
+    // Stop ONE backgrounded Xenomoon by its task id; the hive turn and any other
     // background workers keep running. The SDK emits a task_notification:stopped.
     void session.query?.stopTask?.(msg.taskId);
     send({ type: "status", text: `stopping background agent ${msg.taskId}…` });

@@ -1,5 +1,5 @@
 // Health check for a game driven by the framework. Verifies the framework SOURCE (the
-// xenodot plugin) is intact, the game is a valid engine project, and the per-game working
+// xenomoon plugin) is intact, the game is a valid engine project, and the per-game working
 // files (tools copied, library linked) are materialized. Materializes first (idempotent),
 // then checks. Exits non-zero on any HARD failure so it can gate `new` and CI.
 //
@@ -77,7 +77,7 @@ const checks = [
   {
     ok: existsSync(path.join(FRAMEWORK_PLUGIN_DIR, ".claude-plugin", "plugin.json")),
     hard: true,
-    label: "xenodot plugin manifest present",
+    label: "xenomoon plugin manifest present",
   },
   {
     // A populated domain (godot) must ship capabilities; an empty domain starts with none and
@@ -110,9 +110,9 @@ const checks = [
       : `${ENGINE_LABEL} binary not found — set GODOT=/path/to/${ENGINE.name} (agents will re-derive it per call)`,
   },
   {
-    ok: existsSync(path.join(PROJECT_DIR, ".xenodot", "manifest.json")),
+    ok: existsSync(path.join(PROJECT_DIR, ".xenomoon", "manifest.json")),
     hard: false,
-    label: "facts manifest generated (.xenodot/manifest.json)",
+    label: "facts manifest generated (.xenomoon/manifest.json)",
   },
   { ok: libraryLinked(), hard: false, label: "library/ symlinked to the plugin" },
   {
@@ -151,6 +151,6 @@ console.log(
   "  Terminal use: install the plugin once —\n" +
     "    /plugin marketplace add " +
     path.dirname(FRAMEWORK_PLUGIN_DIR) +
-    "\n    /plugin install xenodot@xenodot-forge\n" +
+    "\n    /plugin install xenomoon@xenomoon-forge\n" +
     "  (The web UI loads the plugin automatically — no install needed.)",
 );

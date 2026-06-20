@@ -1,6 +1,6 @@
 {
-  "name": "xenodot-app",
+  "name": "xenomoon-app",
   "description": "App domain package (empty POC) — capabilities are learned per project, none ship pre-baked.",
   "version": "0.0.0",
-  "author": { "name": "Xenodot Forge" }
+  "author": { "name": "Xenomoon Forge" }
 }

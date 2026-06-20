@@ -1,5 +1,5 @@
 // Keep the README's "Skills" / "Agents" badges in sync with what the framework actually
-// ships — the xenodot plugin (the single source of truth). Counts skill folders and agent
+// ships — the xenomoon plugin (the single source of truth). Counts skill folders and agent
 // files in plugin/, rewrites the badges in README.md, and re-stages it. Wired into
 // .husky/pre-commit so the counts can never drift. Run manually with: npm run badges
 import { readFileSync, writeFileSync, readdirSync } from "node:fs";

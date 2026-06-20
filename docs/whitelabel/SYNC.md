@@ -1,59 +1,51 @@
 # Upstream sync — how we bring xenodot-forge changes into our fork
 
-We track **`upstream` = `arthur0n/xenodot-forge`** closely while shipping a
-white-labeled **xenomoon** product. This file is the runbook. The design rationale
-lives in `SEAMS.md`.
+We track **`upstream` = `arthur0n/xenodot-forge`** while shipping a white-labeled **xenomoon**
+trunk. This file is the runbook; the rationale is in `SEAMS.md`.
 
 ## Branch model
 
-| Branch | Role | Rule |
-|---|---|---|
-| `main` | **Pristine mirror** of `upstream/main`. | Never hand-commit white-label changes here. `git merge --ff-only upstream/main` must always succeed. |
-| `forge` | **Our integration trunk.** `main` + our *additive* files + *minimal* seam edits, written in upstream's `xenodot` vocabulary so it keeps rebasing cleanly. | This is where we work. |
-| (artifact) | `forge` with `node scripts/rebrand.mjs` applied at the tip → the shipped **xenomoon** tree. | Regenerated, never committed onto `forge`. |
+| Branch  | Role                                                                                                                                                     |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `main`  | **Pristine mirror** of `upstream/main` (xenodot vocab). Never hand-commit white-label changes here; `git merge --ff-only upstream/main` always succeeds. |
+| `forge` | **Our trunk, fully rebranded to xenomoon.** What we develop, run, and publish; `xenomoon/main` on GitHub mirrors it.                                     |
 
 Remotes:
 
 ```
 origin    https://github.com/Pexelins/xenodot-forge.git   (our fork)
 upstream  https://github.com/arthur0n/xenodot-forge.git    (read-only source)
+xenomoon  https://github.com/arthur0n/xenomoon.git         (our published product)
 ```
 
-## Routine sync (run `scripts/sync-upstream.sh`, or do it by hand)
+> The trunk is rebranded (xenomoon) and the rebrand is **committed**. `scripts/rebrand.mjs` is no
+> longer a publish-time step — it's a **post-merge fixer**: after merging upstream's xenodot into
+> our xenomoon trunk, re-run it to rebrand the newly-arrived xenodot, then resolve the overlaps.
+
+## Routine sync
 
 ```bash
-# 1. Fast-forward our mirror to upstream.
+# 1. Fast-forward the xenodot mirror to upstream.
 git fetch upstream
 git checkout main
 git merge --ff-only upstream/main
-git push origin main          # optional: keep the fork's main current
 
-# 2. Replay our thin additive layer on top.
+# 2. Bring upstream's changes into the xenomoon trunk.
 git checkout forge
-git rebase main               # conflicts only where a seam touched a changed line
+git merge main                       # conflicts only where upstream touched a line we changed/rebranded
 
-# 3. Prove nothing broke (upstream's own onboarding gate).
-npm install
-npm run test:onboarding
-
-# 4. Regenerate the branded artifact and prove the rebrand is clean + idempotent.
+# 3. Rebrand upstream's newly-arrived "xenodot", prove idempotent, validate.
 node scripts/rebrand.mjs
-npm run test:onboarding       # green on the branded tree too
-node scripts/rebrand.mjs --check   # exits 0 → idempotent
-git restore .                 # drop the rebrand mutations; forge stays in xenodot vocab
+node scripts/rebrand.mjs --check     # exits 0
+npm install && npm run test:onboarding   # 7/7
+
+# 4. Publish.
+gh auth switch --user Pexelins && git push xenomoon forge:main   # force if the tip diverged
 ```
 
-## Why the rebrand is NOT committed onto `forge`
+## Conflicts
 
-A hand-edited rebrand touches ~70 upstream files (the `ui/` spine is upstream's
-churn hotspot). Committing that guarantees a merge conflict on almost every pull.
-The codemod keeps our committed conflict surface ~empty: the rebrand is data
-(`scripts/rebrand.mjs`), re-applied after each sync, so upstream's *new* `xenodot`
-occurrences get rebranded automatically with zero 3-way merge.
-
-## When a rebase conflict does happen
-
-It can only happen on a file listed in `SEAMS.md` (the only upstream files we
-edit). Resolve by re-applying our small seam hook onto upstream's new version, then
-update `SEAMS.md` if the surrounding code moved. If a conflict shows up in a file
-**not** in `SEAMS.md`, that's a bug in our discipline — investigate before resolving.
+A merge conflict appears where upstream edited a line we also changed (a rebranded identifier, or a
+seam listed in `SEAMS.md`). Resolve to keep our xenomoon version **plus** upstream's real change,
+then re-run the codemod so nothing is left half-xenodot. The denylist (`arthur0n` lines,
+`docs/whitelabel/**`, `scripts/` machinery) is preserved automatically.

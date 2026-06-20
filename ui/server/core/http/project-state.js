@@ -112,7 +112,7 @@ export function projectState() {
       }),
     scenes: walk(dir, DOMAIN.inventory.scenes, [], dir),
     scripts: walk(dir, DOMAIN.inventory.scripts, [], dir),
-    // Capabilities come from the xenodot plugin (the framework source); a game may also
+    // Capabilities come from the xenomoon plugin (the framework source); a game may also
     // carry its own unpromoted agents/skills in .claude/. Show both, plugin first.
     agents: collectAgents([
       path.join(FRAMEWORK_PLUGIN_DIR, "agents"),

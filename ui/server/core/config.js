@@ -16,7 +16,7 @@ export const UI_DIR = path.join(__dirname, "..", "..");
 export const FRAMEWORK_DIR = path.join(UI_DIR, "..");
 /** Saved-path config written by `npm run setup` — gitignored, so each fork
  * remembers its own game project without committing it. */
-export const CONFIG_FILE = path.join(FRAMEWORK_DIR, ".xenodot.json");
+export const CONFIG_FILE = path.join(FRAMEWORK_DIR, ".xenomoon.json");
 
 /** OpenAI's official `codex-plugin-cc`, vendored on disk so the SDK can load it as a
  * SECOND local plugin (the SDK `plugins` option only accepts `{ type: "local" }`, no
@@ -43,7 +43,7 @@ const args = process.argv.slice(2);
  * the local `codex` CLI (`codex login`), so there is no key or URL to store here.
  * @typedef {{ enabled?: boolean }} CodexConfig */
 
-/** Parsed `.xenodot.json` (written by `npm run setup`), or `{}` if absent/invalid.
+/** Parsed `.xenomoon.json` (written by `npm run setup`), or `{}` if absent/invalid.
  * Read once: it carries both the saved project path and the engine block. */
 const SAVED = (() => {
   try {
@@ -60,7 +60,7 @@ const SAVED = (() => {
  * vendors or tracks it. Resolution order (first hit wins):
  *   1. a path argument:        `npm start /path/to/project`
  *   2. the GAME_DIR env var
- *   3. the saved path:         `.xenodot.json` (set once via `npm run setup`)
+ *   3. the saved path:         `.xenomoon.json` (set once via `npm run setup`)
  *   4. default sibling:        `../game` (next to the framework folder)
  */
 function resolveProjectDir() {
@@ -76,8 +76,8 @@ export const PROJECT_DIR = resolveProjectDir();
 /** The active target domain pack (see ui/server/core/domain-resolver.js). The spine reads
  * per-domain values (engine/project marker, inventory extensions, plugin, orchestrator,
  * commands) from this descriptor instead of hardcoding them. The PROJECT's lock
- * (`.xenodot-project.json`, written by `forge new --domain`) is authoritative; a conflicting
- * env `XENODOT_DOMAIN` / `.xenodot.json` override is refused (no silent override). With no
+ * (`.xenomoon-project.json`, written by `forge new --domain`) is authoritative; a conflicting
+ * env `XENOMOON_DOMAIN` / `.xenomoon.json` override is refused (no silent override). With no
  * lock: override → "godot" (which reproduces the framework's original behavior). */
 export const DOMAIN = resolveActiveDomain(PROJECT_DIR, FRAMEWORK_DIR);
 
@@ -92,7 +92,7 @@ export const FRAMEWORK_PLUGIN_DIR = path.join(FRAMEWORK_DIR, DOMAIN.plugin);
  * forks share Godot's project format, scene files, GDScript and CLI, so swapping
  * the binary is the whole switch — see docs/engines.md. Resolution (first hit
  * wins): env (`ENGINE_NAME` / `ENGINE_PROJECT_FILE` / `ENGINE_BIN`) →
- * `.xenodot.json` `engine` field → the active domain's defaults (Godot for the
+ * `.xenomoon.json` `engine` field → the active domain's defaults (Godot for the
  * default `godot` domain).
  *   - `projectFile`: on-disk marker used to detect a project. `project.godot` by
  *     default, which the forks also use, so detection works for them unchanged.
@@ -108,7 +108,7 @@ export const ENGINE = {
 /** Capitalized engine name for UI/CLI copy, e.g. "Godot", "Redot", "Blazium". */
 export const ENGINE_LABEL = ENGINE.name.charAt(0).toUpperCase() + ENGINE.name.slice(1);
 
-/** Merge a resolved engine binary into `.xenodot.json` so the lookup is one-time, not
+/** Merge a resolved engine binary into `.xenomoon.json` so the lookup is one-time, not
  * per-boot — every other saved field (projectDir, hermes, …) is preserved. Best-effort:
  * a write failure is non-fatal (the in-memory `$GODOT` still works for this run).
  * @param {string} bin */
@@ -141,11 +141,11 @@ export const RES_ASSET_MOUNT = "x-shared-assets";
  * game uses but kept OUTSIDE its tree, so the game stays pure game. Symlinked into the game
  * at `res://x-shared-assets/` — and, unlike the knowledge library, NOT .gdignored, so Godot
  * scans and imports it. The framework is per-game, so this dir is effectively this game's,
- * just external. Resolution (first hit wins): env `XENODOT_ASSET_LIBRARY` → `.xenodot.json`
+ * just external. Resolution (first hit wins): env `XENOMOON_ASSET_LIBRARY` → `.xenomoon.json`
  * `assetLibrary` → default sibling `../x-shared-assets`. May start empty — the framework
  * only needs to know where it is. */
 export const ASSET_LIBRARY = path.resolve(
-  process.env.XENODOT_ASSET_LIBRARY ??
+  process.env.XENOMOON_ASSET_LIBRARY ??
     SAVED.assetLibrary ??
     path.join(FRAMEWORK_DIR, "..", RES_ASSET_MOUNT),
 );
@@ -154,7 +154,7 @@ export const ASSET_LIBRARY = path.resolve(
 // agent shell use it with no per-call setup. The Claude Code session the SDK spawns inherits
 // this process's env, so every `$GODOT` call (tools/validate.sh, the godot-verify skill) hits
 // the chosen binary — killing the per-shell `GODOT=…` re-derivation that otherwise repeats on
-// every Bash call. Precedence: an explicit engine.bin (env/.xenodot.json) wins untouched; else,
+// every Bash call. Precedence: an explicit engine.bin (env/.xenomoon.json) wins untouched; else,
 // when nothing is configured, auto-probe and PERSIST the result so the lookup is truly one-time.
 // Load-time side effect, by design.
 if (ENGINE.bin) {
@@ -172,19 +172,19 @@ if (ENGINE.bin) {
 // can locate the library (and the framework itself, for promotion / self-improvement)
 // regardless of the game cwd — they read/write via these paths, granted by
 // `additionalDirectories` (see session.js). Inherited by the Claude Code subprocess.
-process.env.XENODOT_PLUGIN = FRAMEWORK_PLUGIN_DIR;
-process.env.XENODOT_LIBRARY = path.join(FRAMEWORK_PLUGIN_DIR, "library");
+process.env.XENOMOON_PLUGIN = FRAMEWORK_PLUGIN_DIR;
+process.env.XENOMOON_LIBRARY = path.join(FRAMEWORK_PLUGIN_DIR, "library");
 // The external shared-asset library (see ASSET_LIBRARY). Exported so the spawned session,
 // its agents (asset-advisor reads/verifies the sourced file here) and validate.sh can locate
 // it regardless of cwd; the game reaches the same bytes via the res://x-shared-assets symlink.
-process.env.XENODOT_ASSET_LIBRARY = ASSET_LIBRARY;
+process.env.XENOMOON_ASSET_LIBRARY = ASSET_LIBRARY;
 
 /** The generated per-game facts manifest (engine bin/version, render config, commands,
  * capability registry) — written by gen-manifest.js inside prepareGame(). Exported so the
  * spawned session and `tools/forge-facts` can read deterministic project facts instead of
  * re-deriving them (re-reading project.godot, re-globbing tools/) on every task. */
-export const MANIFEST_FILE = path.join(PROJECT_DIR, ".xenodot", "manifest.json");
-process.env.XENODOT_MANIFEST = MANIFEST_FILE;
+export const MANIFEST_FILE = path.join(PROJECT_DIR, ".xenomoon", "manifest.json");
+process.env.XENOMOON_MANIFEST = MANIFEST_FILE;
 
 /** Whether PROJECT_DIR actually holds an engine project (Godot or a fork) —
  * drives the startup warning and the UI's empty-state banner. */
@@ -256,7 +256,7 @@ export const HERMES_MODELS = [
   "nousresearch/hermes-4.3-36b",
 ];
 
-/** Effective Hermes config, resolved fresh on every call (env overrides → `.xenodot.json`
+/** Effective Hermes config, resolved fresh on every call (env overrides → `.xenomoon.json`
  * `hermes` block → disabled), so switching it on from the CLI or the UI takes effect
  * WITHOUT a server restart. The apiKey is read here but must never be sent to the browser
  * (see hermesPublicConfig).
@@ -295,7 +295,7 @@ export function hermesPublicConfig() {
   };
 }
 
-/** Merge a partial Hermes block into `.xenodot.json`, preserving every other field
+/** Merge a partial Hermes block into `.xenomoon.json`, preserving every other field
  * (projectDir, engine, …). An empty-string apiKey is dropped (don't overwrite a saved
  * key with blank when the UI didn't resend it); a non-empty one replaces it.
  * @param {HermesConfig} patch @returns {{ ok: true } | { error: string }} */
@@ -323,7 +323,7 @@ export function saveHermesConfig(patch) {
 }
 
 /** Effective Codex config, resolved fresh on every call (env `CODEX_ENABLED` →
- * `.xenodot.json` `codex` block → disabled), so toggling it from the UI or the CLI takes
+ * `.xenomoon.json` `codex` block → disabled), so toggling it from the UI or the CLI takes
  * effect WITHOUT a server restart (session.js re-reads it when a new session starts).
  * There is no secret here — Codex auth lives in the local `codex` CLI (`codex login`).
  * @returns {{ enabled: boolean }} */
@@ -351,7 +351,7 @@ export function codexPublicConfig() {
   return { enabled: getCodexConfig().enabled, vendored: existsSync(CODEX_PLUGIN_DIR) };
 }
 
-/** Merge a partial Codex block into `.xenodot.json`, preserving every other field
+/** Merge a partial Codex block into `.xenomoon.json`, preserving every other field
  * (projectDir, engine, hermes, …). @param {CodexConfig} patch @returns {{ ok: true } | { error: string }} */
 export function saveCodexConfig(patch) {
   /** @type {Record<string, unknown>} */

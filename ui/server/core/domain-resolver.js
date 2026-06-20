@@ -8,8 +8,8 @@
 // A domain is bound to a project DETERMINISTICALLY at install time: `forge new --domain <name>`
 // writes a project lock (PROJECT_LOCK_FILE) into the project. At runtime the spine reads that
 // lock as AUTHORITATIVE — an explicit override (env / framework config) that disagrees is
-// refused, never silently applied. Resolution when no lock exists: env XENODOT_DOMAIN ->
-// framework .xenodot.json "domain" -> "godot".
+// refused, never silently applied. Resolution when no lock exists: env XENOMOON_DOMAIN ->
+// framework .xenomoon.json "domain" -> "godot".
 //
 // This module is ADDITIVE (no upstream file owns it), so it never conflicts on an upstream
 // pull. The few spine files that consult it are listed in docs/whitelabel/SEAMS.md.
@@ -22,9 +22,9 @@ import { parseJSON } from "../../lib/json.js";
 export const DEFAULT_DOMAIN = "godot";
 
 /** A project's domain lock, written into the project by install — DISTINCT from the framework's
- *  own `.xenodot.json` (which lives at the framework root). Committed with the project so the
+ *  own `.xenomoon.json` (which lives at the framework root). Committed with the project so the
  *  binding travels. Shape: `{ "domain": "<name>" }`. */
-export const PROJECT_LOCK_FILE = ".xenodot-project.json";
+export const PROJECT_LOCK_FILE = ".xenomoon-project.json";
 
 const SELF_DIR = path.dirname(fileURLToPath(import.meta.url)); // ui/server/core
 const SELF_FRAMEWORK_DIR = path.join(SELF_DIR, "..", "..", "..");
@@ -132,12 +132,12 @@ export function writeProjectLock(projectDir, domain) {
   );
 }
 
-/** The domain a caller explicitly REQUESTED (an override), or null — env XENODOT_DOMAIN, then the
- *  framework's own `.xenodot.json` `domain`. Absence is null (NOT the default).
+/** The domain a caller explicitly REQUESTED (an override), or null — env XENOMOON_DOMAIN, then the
+ *  framework's own `.xenomoon.json` `domain`. Absence is null (NOT the default).
  *  @param {string} frameworkDir @returns {string|null} */
 function readRequestedDomain(frameworkDir) {
-  if (process.env.XENODOT_DOMAIN) return process.env.XENODOT_DOMAIN;
-  return readDomainKey(path.join(frameworkDir, ".xenodot.json"));
+  if (process.env.XENOMOON_DOMAIN) return process.env.XENOMOON_DOMAIN;
+  return readDomainKey(path.join(frameworkDir, ".xenomoon.json"));
 }
 
 /** Resolve the active domain NAME for a project. The project's lock is AUTHORITATIVE; an explicit
@@ -149,7 +149,7 @@ export function resolveDomainName(projectDir, frameworkDir = SELF_FRAMEWORK_DIR)
   if (locked && requested && locked !== requested) {
     throw new Error(
       `domain mismatch: this project is locked to "${locked}" but "${requested}" was requested ` +
-        `(via env XENODOT_DOMAIN or .xenodot.json). The project lock wins — drop the override, or ` +
+        `(via env XENOMOON_DOMAIN or .xenomoon.json). The project lock wins — drop the override, or ` +
         `re-install the project for "${requested}".`,
     );
   }

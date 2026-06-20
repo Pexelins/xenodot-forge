@@ -3,8 +3,8 @@ import { $ } from "./dom.js";
 import { parseJSON } from "../../lib/json.js";
 
 const rootStyle = document.documentElement.style;
-const LS_KEY = "xenodot-panel-widths";
-const SIDEBAR_KEY = "xenodot-sidebar-collapsed";
+const LS_KEY = "xenomoon-panel-widths";
+const SIDEBAR_KEY = "xenomoon-sidebar-collapsed";
 
 /** Apply any saved panel widths on startup. */
 export function restorePanelWidths() {
@@ -30,7 +30,7 @@ function persistWidths() {
   } catch {}
 }
 
-const ACTIVITY_KEY = "xenodot-activity-collapsed";
+const ACTIVITY_KEY = "xenomoon-activity-collapsed";
 
 /** A collapsible side panel driven from a topbar toggle: a persisted body class,
  * a glyph that flips with state, and a viewport-aware default when unset.

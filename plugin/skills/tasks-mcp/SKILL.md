@@ -7,7 +7,7 @@ metadata:
 
 # Tasks MCP — Plan & Scratchpad
 
-`mcp__ui__tasks` is a persistent task board (`.xenodot/tasks.json`, shown in the UI right rail).
+`mcp__ui__tasks` is a persistent task board (`.xenomoon/tasks.json`, shown in the UI right rail).
 Calling it never pauses the session — call it freely between other tool calls. **Every result
 lists the tasks still OPEN (with their ids)** — read it to see what's left and to get the `id`
 you need for `update`/`remove`.

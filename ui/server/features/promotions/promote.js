@@ -2,14 +2,14 @@
 // gets it. Authoring defaults to game-local (game/.claude/skills|agents, or game/tools);
 // promotion is the deliberate, human-chosen step that globalizes it (the executor behind
 // the orchestrator's "promote to the framework?" gate). After the move the capability is
-// gone from this game and the next session loads it from the plugin as xenodot:<name>.
+// gone from this game and the next session loads it from the plugin as xenomoon:<name>.
 // (Agnostic tools are then copied back into the game as a working copy by materialize.)
 //
 // Two modes:
 //   • Explicit:        npm run promote -- <skills|agents|tools> <name> [/path/to/game]
 //                        e.g. npm run promote -- tools profile_frame.gd
 //   • Manifest-driven: npm run promote -- --pending [/path/to/game]
-//                        promotes every APPROVED entry in .xenodot/promotions.json (filed
+//                        promotes every APPROVED entry in .xenomoon/promotions.json (filed
 //                        via mcp__ui__promote, approved in the UI) and marks it `promoted`.
 import path from "node:path";
 import { PROJECT_DIR } from "../../core/config.js";
@@ -63,5 +63,5 @@ if (!result.ok) {
 }
 const label = name.replace(/\.md$/, "");
 console.log(`promote: ${result.msg}`);
-console.log(`Now available to every game as xenodot:${label} — restart the session to load it.`);
+console.log(`Now available to every game as xenomoon:${label} — restart the session to load it.`);
 if (kind !== "tools") console.log("Tip: run `npm run badges` to refresh the README counts.");

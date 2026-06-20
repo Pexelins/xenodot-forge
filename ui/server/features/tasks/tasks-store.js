@@ -14,7 +14,7 @@ const OWNERS = new Set(["agent", "user"]);
 const STATUSES = new Set(["pending", "in_progress", "done"]);
 
 /** @returns {string} */
-const tasksDir = () => path.join(PROJECT_DIR, ".xenodot");
+const tasksDir = () => path.join(PROJECT_DIR, ".xenomoon");
 /** @returns {string} */
 const tasksPath = () => path.join(tasksDir(), "tasks.json");
 

@@ -79,8 +79,8 @@ EOF
 fi
 
 # --- log the evaluation record (best-effort; never fail the hook) ---
-log_dir="${XENODOT_PLUGIN%/plugin}/logs"
-[ -n "${XENODOT_PLUGIN:-}" ] || log_dir="${TMPDIR:-/tmp}"
+log_dir="${XENOMOON_PLUGIN%/plugin}/logs"
+[ -n "${XENOMOON_PLUGIN:-}" ] || log_dir="${TMPDIR:-/tmp}"
 {
   mkdir -p "$log_dir" 2>/dev/null && \
   jq -cn \

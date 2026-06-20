@@ -1,7 +1,7 @@
 # <Your game> — game conventions
 
 This repo is the **game**. The AI framework that builds it — agents, `godot-*` skills, the
-verify/gen tools, and the design→build→verify pipeline — loads from the **xenodot** Claude Code
+verify/gen tools, and the design→build→verify pipeline — loads from the **xenomoon** Claude Code
 plugin (the single source of truth); it is **not** in this repo. Its working files appear here
 only as gitignored, generated paths: `tools/` (copied from the plugin) and `library/` (a symlink
 to the plugin's knowledge base). Game-specific skills/agents you author live in this repo's

@@ -27,11 +27,11 @@ OKLCH: oklch(0.20 0.035 130)
 HEX: #202B20
 
 :root {
---xenodot-void-ink: oklch(0.11 0.05 28.96);
---xenodot-forge-green: oklch(0.72 0.20 130);
---xenodot-alien-lime: oklch(0.86 0.19 120);
---xenodot-pale-plasma: oklch(0.94 0.08 115);
---xenodot-bone-white: oklch(0.97 0.015 105);
---xenodot-muted-alloy: oklch(0.55 0.035 125);
---xenodot-deep-panel: oklch(0.20 0.035 130);
+--xenomoon-void-ink: oklch(0.11 0.05 28.96);
+--xenomoon-forge-green: oklch(0.72 0.20 130);
+--xenomoon-alien-lime: oklch(0.86 0.19 120);
+--xenomoon-pale-plasma: oklch(0.94 0.08 115);
+--xenomoon-bone-white: oklch(0.97 0.015 105);
+--xenomoon-muted-alloy: oklch(0.55 0.035 125);
+--xenomoon-deep-panel: oklch(0.20 0.035 130);
 }

@@ -13,7 +13,7 @@ import { PROJECT_DIR } from "../../core/config.js";
 export const DEFAULT_INTERVAL_MS = 5 * 60 * 1000;
 
 /** @returns {string} */
-const dir = () => path.join(PROJECT_DIR, ".xenodot");
+const dir = () => path.join(PROJECT_DIR, ".xenomoon");
 /** @returns {string} */
 const filePath = () => path.join(dir(), "autonomous.json");
 

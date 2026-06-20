@@ -19,7 +19,7 @@ const PALETTE = [
 const assigned = new Map();
 let nextIdx = 0;
 
-// Fixed identity colors for the known cast. A given Xenodot reads as the SAME
+// Fixed identity colors for the known cast. A given Xenomoon reads as the SAME
 // hue everywhere it appears — chat avatar, activity log, running strip, and the
 // task board's owner stamp — so you can track one agent across panels by color
 // alone. Hues are pulled from PALETTE above so the cast stays on-theme; only
@@ -34,11 +34,11 @@ const ROLE_COLOR = {
   "godot-refactor": "oklch(0.78 0.1 210)", // cyan — inspection steel
   "addon-researcher": "oklch(0.76 0.13 150)", // verdigris — the library
   "transcript-researcher": "oklch(0.74 0.15 345)", // magenta — raw signal
-  hermes: "#3b2aff", // electric indigo — the external Hermes researcher (not a Xenodot)
+  hermes: "#3b2aff", // electric indigo — the external Hermes researcher (not a Xenomoon)
 };
 
 /** Strip "namespace:" prefix from a plugin-namespaced agent id.
- *  "xenodot:game-designer" → "game-designer", "hermes" → "hermes"
+ *  "xenomoon:game-designer" → "game-designer", "hermes" → "hermes"
  * @param {string} name @returns {string} */
 function stripNs(name) {
   if (!name) return name;
@@ -47,19 +47,19 @@ function stripNs(name) {
 }
 
 // Display-name (brand) map: identifier -> what the user sees. Brand first
-// ("Xenodot <role>"), so every agent reads as one of our Xenodots. Pure UI
+// ("Xenomoon <role>"), so every agent reads as one of our Xenomoons. Pure UI
 // flavor — the SDK identifiers (subagent_type) and agent filenames stay literal
 // so routing keeps working. Only the rendered text changes.
-//   main -> Xenodot Hive, addon-researcher -> Xenodot Researcher, etc.
+//   main -> Xenomoon Hive, addon-researcher -> Xenomoon Researcher, etc.
 /** @type {Record<string, string>} */
 const DISPLAY = {
-  main: "Xenodot Hive",
-  "game-designer": "Xenodot Designer",
-  "level-designer": "Xenodot Level Designer",
-  "godot-dev": "Xenodot Developer",
-  "godot-refactor": "Xenodot Refactor",
-  "addon-researcher": "Xenodot Researcher",
-  "transcript-researcher": "Xenodot Transcript",
+  main: "Xenomoon Hive",
+  "game-designer": "Xenomoon Designer",
+  "level-designer": "Xenomoon Level Designer",
+  "godot-dev": "Xenomoon Developer",
+  "godot-refactor": "Xenomoon Refactor",
+  "addon-researcher": "Xenomoon Researcher",
+  "transcript-researcher": "Xenomoon Transcript",
   hermes: "Hermes: Researcher",
   "codex-rescue": "Codex: Reviewer",
 };
@@ -73,24 +73,24 @@ export function agentLabel(name) {
   // Fallback for any agent not in the map: brand first, domain prefix dropped.
   const role = bare.replace(/^(godot|game|addon|level|transcript)-/, "").replace(/-/g, " ");
   const titled = role.replace(/\b\w/g, (c) => c.toUpperCase());
-  return `Xenodot ${titled}`;
+  return `Xenomoon ${titled}`;
 }
 
 /** The avatar/initial for an agent: the first word of its display name that
- * isn't "Xenodot" — so "Xenodot Hive" reads "H" and "Xenodot Designer" reads "D".
+ * isn't "Xenomoon" — so "Xenomoon Hive" reads "H" and "Xenomoon Designer" reads "D".
  * @param {string} name @returns {string} */
 export function agentInitial(name) {
   const word = agentLabel(name)
     .split(" ")
-    .find((w) => w && w !== "Xenodot");
+    .find((w) => w && w !== "Xenomoon");
   return (word ?? agentLabel(name)).charAt(0).toUpperCase();
 }
 
-/** The agent's role, brand prefix dropped — "Xenodot Developer" -> "Developer",
+/** The agent's role, brand prefix dropped — "Xenomoon Developer" -> "Developer",
  * "main" -> "Hive". For tight spots (the task board's owner stamp) where the
- * "Xenodot" brand is already implied by the surrounding UI. @param {string} name @returns {string} */
+ * "Xenomoon" brand is already implied by the surrounding UI. @param {string} name @returns {string} */
 export function agentRole(name) {
-  return agentLabel(name).replace(/^Xenodot\s+/, "") || agentLabel(name);
+  return agentLabel(name).replace(/^Xenomoon\s+/, "") || agentLabel(name);
 }
 
 /** @param {string} name @returns {string} */

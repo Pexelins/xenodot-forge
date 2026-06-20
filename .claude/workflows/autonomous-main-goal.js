@@ -39,7 +39,7 @@ export const meta = {
 };
 
 // The Main Goal — in the real feature this comes from the header modal /
-// .xenodot/autonomous.json. Here it's passed via args so the workflow is reusable.
+// .xenomoon/autonomous.json. Here it's passed via args so the workflow is reusable.
 const GOAL = (args && args.goal) || "Add a pause menu to the game";
 const MAX_CYCLES = (args && args.maxCycles) || 6; // stand-in for "until the user stops / budget out"
 
@@ -82,10 +82,10 @@ const CYCLE_SCHEMA = {
 // ── Phase 1: Kickoff — evaluate the goal up front (the kickoff turn) ──
 phase("Kickoff");
 const plan = await agent(
-  `You are the Xenodot orchestrator. A standing Main Goal was just set: "${GOAL}".\n` +
+  `You are the Xenomoon orchestrator. A standing Main Goal was just set: "${GOAL}".\n` +
     `Evaluate it the way the kickoff turn would: restate it in one line, list ONLY blocking ` +
     `clarifying questions (keep minimal — most goals need none), and break it into an ordered ` +
-    `list of small implementation slices a single xenodot:godot-dev task could each own.`,
+    `list of small implementation slices a single xenomoon:godot-dev task could each own.`,
   { label: "kickoff:evaluate", phase: "Kickoff", schema: PLAN_SCHEMA },
 );
 
@@ -110,12 +110,12 @@ while (!goalMet && cycle < MAX_CYCLES) {
   // Each cycle mirrors an `[Autonomous check #N]` turn: read where we are, dispatch
   // the next slice, emit a one-line progress note. `history` stands in for the task board.
   const result = await agent(
-    `You are the Xenodot orchestrator on autonomous check #${cycle}.\n` +
+    `You are the Xenomoon orchestrator on autonomous check #${cycle}.\n` +
       `Main Goal: "${GOAL}".\n` +
       `Planned slices: ${plan ? JSON.stringify(plan.tasks) : "[]"}.\n` +
       `Progress so far: ${history.length ? JSON.stringify(history) : "(nothing yet)"}.\n` +
       `Assess progress vs the goal, decide the SINGLE next slice to dispatch to a background ` +
-      `xenodot:godot-dev (or report blocked), and report goalMet=true only once the board ` +
+      `xenomoon:godot-dev (or report blocked), and report goalMet=true only once the board ` +
       `would satisfy the whole goal.`,
     { label: `check#${cycle}`, phase: "Check loop", schema: CYCLE_SCHEMA },
   );

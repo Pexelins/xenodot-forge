@@ -8,7 +8,7 @@
 //   • Runnable:   `npm run codex:check` prints a one-line readiness summary — handy while
 //       standing Codex up from the terminal.
 //
-// Auth is owned by the Codex CLI, not by Xenodot: `codex login status` exits 0 when
+// Auth is owned by the Codex CLI, not by Xenomoon: `codex login status` exits 0 when
 // credentials are present (file-based auth.json under CODEX_HOME, default ~/.codex, or the
 // OS credential store) and 1 otherwise — so we shell that as the source of truth and never
 // store a key ourselves. The plugin is "vendored" once `npm run codex:setup` clones it.

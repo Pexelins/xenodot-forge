@@ -4,7 +4,7 @@
 // mcp__ui__promote tool, decided (approve/reject) from the UI, and consumed by
 // `npm run promote -- --pending` (which moves the files and marks them promoted).
 // Pure disk module, same shape as tasks-store: re-read/written per mutation,
-// lives next to tasks.json in the game's .xenodot/.
+// lives next to tasks.json in the game's .xenomoon/.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { parseJSON } from "../../../lib/json.js";
@@ -17,7 +17,7 @@ const KINDS = new Set(["tools", "skills", "agents"]);
 const STATUSES = new Set(["requested", "approved", "rejected", "promoted"]);
 
 /** @returns {string} */
-const dir = () => path.join(PROJECT_DIR, ".xenodot");
+const dir = () => path.join(PROJECT_DIR, ".xenomoon");
 /** @returns {string} */
 const file = () => path.join(dir(), "promotions.json");
 

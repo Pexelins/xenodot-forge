@@ -119,7 +119,7 @@ function handleLevelPost(req, res) {
   });
 }
 
-/** Persist the settings the ⚙ panel submitted into .xenodot.json — the Hermes block (enable,
+/** Persist the settings the ⚙ panel submitted into .xenomoon.json — the Hermes block (enable,
  * apiUrl, model, and optionally a new apiKey) and/or the Codex block (just `enabled`; Codex
  * auth lives in the `codex` CLI, so there's no secret here) — then respond with the
  * secret-free public views so the panel re-renders from truth. Each block is optional; only

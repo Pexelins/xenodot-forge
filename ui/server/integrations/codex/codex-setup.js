@@ -1,5 +1,5 @@
 // Guided one-shot Codex setup — makes the OPTIONAL OpenAI Codex code reviewer usable from
-// Xenodot, without touching the framework spine (`plugin/`). End to end:
+// Xenomoon, without touching the framework spine (`plugin/`). End to end:
 //
 //   1. check the `codex` CLI is installed (offer `npm i -g @openai/codex` if it's missing),
 //   2. check you're logged in (`codex login status`) and, if not, print the one command to
@@ -8,7 +8,7 @@
 //   3. VENDOR the plugin: clone OpenAI's `codex-plugin-cc` into the gitignored `vendor/` dir,
 //      because the Agent SDK's `plugins` option only loads `{ type: "local" }` paths — there
 //      is no marketplace/git source at the SDK layer (so we put it on disk ourselves),
-//   4. flip Xenodot's `.xenodot.json` `codex` block on, so session.js loads the plugin.
+//   4. flip Xenomoon's `.xenomoon.json` `codex` block on, so session.js loads the plugin.
 //
 // We deliberately do NOT enable the plugin's opt-in Stop-hook "review gate" (it can spin up
 // long Claude↔Codex loops). Reviews stay ON-DEMAND: type `/codex:review` in a session.
@@ -148,23 +148,23 @@ function vendorPlugin() {
   return true;
 }
 
-/** Flip Xenodot's codex switch on. @returns {boolean} */
+/** Flip Xenomoon's codex switch on. @returns {boolean} */
 function enableCodex() {
   const res = saveCodexConfig({ enabled: true });
   if ("error" in res) {
-    console.error(`Failed to save Xenodot config: ${res.error}`);
+    console.error(`Failed to save Xenomoon config: ${res.error}`);
     return false;
   }
-  console.log(`✓ Xenodot wired → ${CONFIG_FILE} (codex enabled)`);
+  console.log(`✓ Xenomoon wired → ${CONFIG_FILE} (codex enabled)`);
   return true;
 }
 
 /** Undo what setup wrote: disable the switch and remove the vendored clone. Leaves the global
  * `codex` CLI and your `codex login` session untouched. */
 function resetSetup() {
-  console.log("Xenodot · removing the Codex setup\n");
+  console.log("Xenomoon · removing the Codex setup\n");
   const res = saveCodexConfig({ enabled: false });
-  console.log("error" in res ? `• ${res.error}` : "✓ Disabled codex in .xenodot.json.");
+  console.log("error" in res ? `• ${res.error}` : "✓ Disabled codex in .xenomoon.json.");
   if (existsSync(VENDOR_DIR)) {
     rmSync(VENDOR_DIR, { recursive: true, force: true });
     console.log("✓ Removed the vendored vendor/codex-plugin-cc clone.");
@@ -195,7 +195,7 @@ async function main() {
     resetSetup();
     return;
   }
-  console.log("Xenodot · guided Codex setup (optional, on-demand code review)\n");
+  console.log("Xenomoon · guided Codex setup (optional, on-demand code review)\n");
   if (!nodeOk()) {
     console.error(`✗ Node ${process.versions.node} is too old — Codex needs Node ≥ 18.18.`);
     process.exitCode = 1;

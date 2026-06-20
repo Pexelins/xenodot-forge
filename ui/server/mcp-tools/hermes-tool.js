@@ -1,4 +1,4 @@
-// Hermes tool: the ONE bridge from the Xenodot Hive to an external Hermes Agent
+// Hermes tool: the ONE bridge from the Xenomoon Hive to an external Hermes Agent
 // (https://hermes-agent.nousresearch.com/) running as a subordinate researcher coworker. Only the
 // Hive (orchestrator main loop) calls it — no sub-agent frontmatter grants it, and it has no
 // auto-allow branch in canUseTool, so every dispatch passes the per-call permission gate.
@@ -71,7 +71,7 @@ const baseOf = (/** @type {string} */ url) => url.replace(/\/+$/, "");
 function buildInstructions(persona, context) {
   const headless =
     "\n\n--- How this runs ---\n" +
-    "You are running headless for the Xenodot Hive: there is no interactive human in this run. " +
+    "You are running headless for the Xenomoon Hive: there is no interactive human in this run. " +
     "Your FINAL message IS your entire deliverable — put your complete, self-contained findings " +
     "there (a partial answer or a question back is lost). Work to a conclusion, then stop.\n\n" +
     "--- Your own brain ---\n" +
@@ -122,7 +122,7 @@ function findingsTurn(runId, persona, findings) {
           type: "text",
           text:
             `[Hermes · ${persona.name} — run ${runId} delivered its findings]\n\n${findings}\n\n` +
-            "Hand these to the matching xenodot:*-researcher for the human verdict + library write.",
+            "Hand these to the matching xenomoon:*-researcher for the human verdict + library write.",
         },
       ],
     },
@@ -144,7 +144,7 @@ function fallbackTurn(runId, persona, reason) {
           type: "text",
           text:
             `[Hermes · ${persona.name} — run ${runId} did NOT deliver findings: ${reason}]\n\n` +
-            "Treat this as no Hermes result. Dispatch the matching xenodot:*-researcher yourself to " +
+            "Treat this as no Hermes result. Dispatch the matching xenomoon:*-researcher yourself to " +
             "run the investigation instead.",
         },
       ],
@@ -373,7 +373,7 @@ async function watchRun(base, key, runId, persona, send, push) {
             op: "add",
             owner: "user",
             title: `Hermes · ${persona.name} findings ready (run ${runId})`,
-            note: "Review the findings in the feed, then route to the matching xenodot:*-researcher for the verdict + library write.",
+            note: "Review the findings in the feed, then route to the matching xenomoon:*-researcher for the verdict + library write.",
           },
           new Date().toISOString(),
         );
@@ -434,7 +434,7 @@ export function makeHermesFeedbackTool(send) {
   return tool(
     "hermes_feedback",
     "Send the team's verdict on a Hermes findings delivery back to Hermes so it can update its " +
-      "own memory/skills. Call this ONCE per delivery — after the matching xenodot:*-researcher " +
+      "own memory/skills. Call this ONCE per delivery — after the matching xenomoon:*-researcher " +
       "has written the verdict to library/verdicts/. Fire-and-forget: returns immediately, no " +
       "findings come back. Even 'not-useful' runs deserve feedback so Hermes learns what to avoid.",
     {
@@ -458,7 +458,7 @@ export function makeHermesFeedbackTool(send) {
       const base = baseOf(apiUrl);
       const task = `Process feedback on run ${input.runId}: verdict=${input.verdict}. Update your memory/skills based on this lesson.`;
       const instructions =
-        `The Xenodot Hive reviewed your run ${input.runId}.\n` +
+        `The Xenomoon Hive reviewed your run ${input.runId}.\n` +
         `Verdict: ${input.verdict}\n` +
         `Notes: ${input.notes}\n\n` +
         "Update your memory and/or skills to reflect this lesson — record what worked, " +
@@ -508,7 +508,7 @@ export function makeHermesTool(send, push) {
       "message — so DO NOT wait on it; continue or wrap up the turn. Pick a `persona`: 'researcher' " +
       "(default — cited investigation) or 'critic' (adversarially stress-test a claim/plan/findings). " +
       "ONLY the Hive calls this. Hermes is advisory — it never writes files or adopts anything; when " +
-      "its findings arrive, hand them to the matching xenodot:*-researcher for the verdict + library " +
+      "its findings arrive, hand them to the matching xenomoon:*-researcher for the verdict + library " +
       "write. Gated (allow/deny) per call. If it reports Hermes is off/unconfigured, dispatch the " +
       "researcher sub-agent yourself instead.",
     {
@@ -531,7 +531,7 @@ export function makeHermesTool(send, push) {
       if (!cfg.enabled || !cfg.apiUrl || !cfg.apiKey) {
         return ok(
           "Hermes is off or not configured (enable it + set the API key in Settings, or via " +
-            "`npm run hermes`). Fall back to dispatching the matching xenodot:*-researcher yourself.",
+            "`npm run hermes`). Fall back to dispatching the matching xenomoon:*-researcher yourself.",
         );
       }
       const persona = getPersona(input.persona);
@@ -558,7 +558,7 @@ export function makeHermesTool(send, push) {
           : `Hermes call failed: ${err instanceof Error ? err.message : String(err)}`;
         relay(send, persona.id, "done", msg);
         return ok(
-          `${msg} Treat this as no Hermes result — dispatch a xenodot:*-researcher instead.`,
+          `${msg} Treat this as no Hermes result — dispatch a xenomoon:*-researcher instead.`,
         );
       } finally {
         clearTimeout(timer);

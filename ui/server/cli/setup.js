@@ -1,6 +1,6 @@
 // One-time setup: remember which engine project (Godot or a fork — Redot /
 // Blazium) the framework points at, so you don't pass a path on every start.
-// Merges the absolute path into .xenodot.json (gitignored) in the framework root,
+// Merges the absolute path into .xenomoon.json (gitignored) in the framework root,
 // preserving any `engine` / `hermes` block already there (see config.js / docs/engines.md).
 //
 // Usage: npm run setup -- ../game        (or any path to your project)

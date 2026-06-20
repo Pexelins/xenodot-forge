@@ -10,6 +10,6 @@
 # Reads the PreToolUse payload on stdin; emits a deny decision (exit 0) only on a match.
 cmd="$(jq -r '.tool_input.command // empty' 2>/dev/null)"
 if printf '%s' "$cmd" | grep -Eq '(^|[^[:alnum:]_])git[[:space:]]+(reset|checkout|restore|stash|clean)([[:space:]]|$)'; then
-  printf '%s' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"Destructive git is blocked by Xenodot Forge safety policy. git reset/checkout/restore/stash/clean discard or rewrite uncommitted working-tree changes and once wiped an entire uncommitted build. Use read-only git (status/diff/log/show), `git switch -c` to branch; add/commit/push are allowed. If you truly need this, ask the human to run it."}}'
+  printf '%s' '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"Destructive git is blocked by Xenomoon Forge safety policy. git reset/checkout/restore/stash/clean discard or rewrite uncommitted working-tree changes and once wiped an entire uncommitted build. Use read-only git (status/diff/log/show), `git switch -c` to branch; add/commit/push are allowed. If you truly need this, ask the human to run it."}}'
 fi
 exit 0

@@ -14,11 +14,11 @@
 //      `platform_toolsets.api_server` (the only key the bridge's path reads — not `cli`, not the
 //      top-level `toolsets:`). `config set` can't write lists, so this is a direct YAML edit,
 //   5. read the file back and print the real values (no silent state),
-//   6. strip any stale `mcp_servers.xenodot` callback from older Xenodot versions (the bridge no
+//   6. strip any stale `mcp_servers.xenomoon` callback from older Xenomoon versions (the bridge no
 //      longer uses an MCP callback — findings are READ from the runs API; see hermes-tool.js),
-//   7. install the Xenodot "partner" persona into ~/.hermes/SOUL.md (only if it's absent or
+//   7. install the Xenomoon "partner" persona into ~/.hermes/SOUL.md (only if it's absent or
 //      the stock template — a SOUL you've customized is never overwritten),
-//   8. wire Xenodot's .xenodot.json and print the remaining manual steps.
+//   8. wire Xenomoon's .xenomoon.json and print the remaining manual steps.
 //
 // This script NEVER launches an interactive Hermes command (`hermes setup`, `hermes
 // model`, `hermes tools`) — those are the wizards that trap you and won't let you
@@ -267,8 +267,8 @@ function configureModelAndTools() {
     return;
   }
   const lines = readFileSync(cfg, "utf8").split("\n");
-  copyFileSync(cfg, `${cfg}.xenodot.bak`);
-  // The Xenodot bridge talks to the API server, whose platform is `api_server` — NOT `cli`
+  copyFileSync(cfg, `${cfg}.xenomoon.bak`);
+  // The Xenomoon bridge talks to the API server, whose platform is `api_server` — NOT `cli`
   // and NOT the top-level `toolsets:`. This is the ONLY key that constrains our path.
   const ok = upsertNestedFlowList(lines, "platform_toolsets", "api_server", arr);
   writeFileSync(cfg, lines.join("\n"));
@@ -293,14 +293,14 @@ function configureModelAndTools() {
   );
 }
 
-/** Strip any leftover Hive-side MCP callback registration from older Xenodot versions. The bridge
+/** Strip any leftover Hive-side MCP callback registration from older Xenomoon versions. The bridge
  * no longer uses a callback — Hermes' runs API has none; findings are READ from GET /v1/runs/{id}
- * (see hermes-tool.js) — so `mcp_servers.xenodot` is dead config. `hermes mcp remove` edits the
+ * (see hermes-tool.js) — so `mcp_servers.xenomoon` is dead config. `hermes mcp remove` edits the
  * YAML correctly; this is idempotent (a no-op when there's nothing to remove). */
 function removeLegacyCallback() {
-  const r = spawnSync("hermes", ["mcp", "remove", "xenodot"], { stdio: "ignore" });
+  const r = spawnSync("hermes", ["mcp", "remove", "xenomoon"], { stdio: "ignore" });
   if (r.status === 0) {
-    console.log("\n✓ Removed a stale Hermes→Xenodot MCP callback (the bridge no longer uses one).");
+    console.log("\n✓ Removed a stale Hermes→Xenomoon MCP callback (the bridge no longer uses one).");
   }
 }
 
@@ -314,7 +314,7 @@ function soulIsDefault(text) {
   return stripped.length === 0;
 }
 
-/** Install the Xenodot "partner" persona into ~/.hermes/SOUL.md from the repo template, but
+/** Install the Xenomoon "partner" persona into ~/.hermes/SOUL.md from the repo template, but
  * ONLY when SOUL is absent, empty, or the stock template — a SOUL you've customized is left
  * untouched (delete it to opt back in). Idempotent: re-running reports "unchanged". SOUL is a
  * shared, mode-neutral base; the per-call personas (Researcher/Critic) layer their role on top. */
@@ -336,18 +336,18 @@ function ensureSoul() {
     /* absent — we'll install it */
   }
   if (existing !== null && existing.trim() === template.trim()) {
-    console.log("✓ SOUL.md is already the Xenodot partner persona (unchanged).");
+    console.log("✓ SOUL.md is already the Xenomoon partner persona (unchanged).");
     return;
   }
   if (existing !== null && !soulIsDefault(existing)) {
     console.log(
-      `• Kept your custom ${SOUL_FILE} — delete it to install the Xenodot partner persona.`,
+      `• Kept your custom ${SOUL_FILE} — delete it to install the Xenomoon partner persona.`,
     );
     return;
   }
   mkdirSync(HERMES_DIR, { recursive: true });
   writeFileSync(SOUL_FILE, template);
-  console.log(`✓ Installed the Xenodot partner persona → ${SOUL_FILE}`);
+  console.log(`✓ Installed the Xenomoon partner persona → ${SOUL_FILE}`);
 }
 
 /** Print the non-wizard auth steps for the chosen provider. We deliberately NEVER spawn an
@@ -367,15 +367,15 @@ function printAuthGuidance() {
   console.log("  hermes config get model  # verify provider + model");
 }
 
-/** Point Xenodot at the local gateway (enabled, URL, the API_SERVER_KEY). @param {string} key */
-function wireXenodot(key) {
+/** Point Xenomoon at the local gateway (enabled, URL, the API_SERVER_KEY). @param {string} key */
+function wireXenomoon(key) {
   const res = saveHermesConfig({ enabled: true, apiUrl: URL, apiKey: key, model: MODEL });
   if ("error" in res) {
-    console.error(`Failed to save Xenodot config: ${res.error}`);
+    console.error(`Failed to save Xenomoon config: ${res.error}`);
     process.exitCode = 1;
     return;
   }
-  console.log(`\n✓ Xenodot wired → ${CONFIG_FILE} (enabled · ${URL} · key saved)`);
+  console.log(`\n✓ Xenomoon wired → ${CONFIG_FILE} (enabled · ${URL} · key saved)`);
 }
 
 /** Drop every `KEY=...` line from a .env text. @param {string} text @param {string} key @returns {string} */
@@ -386,18 +386,18 @@ function removeEnvKey(text, key) {
     .join("\n");
 }
 
-/** Remove the `hermes` block from .xenodot.json, leaving every other field intact. */
-function unwireXenodot() {
+/** Remove the `hermes` block from .xenomoon.json, leaving every other field intact. */
+function unwireXenomoon() {
   /** @type {Record<string, unknown>} */
   let saved;
   try {
     saved = /** @type {Record<string, unknown>} */ (parseJSON(readFileSync(CONFIG_FILE, "utf8")));
   } catch {
-    console.log("• No .xenodot.json — nothing to unwire.");
+    console.log("• No .xenomoon.json — nothing to unwire.");
     return;
   }
   if (saved.hermes === undefined) {
-    console.log("• .xenodot.json has no hermes block (already clean).");
+    console.log("• .xenomoon.json has no hermes block (already clean).");
     return;
   }
   delete saved.hermes;
@@ -406,13 +406,13 @@ function unwireXenodot() {
 }
 
 /** Undo everything `npm run hermes:setup` wrote, so the flow can be tested from scratch:
- * Xenodot's hermes block, the API_SERVER_* lines in ~/.hermes/.env, the toolset edits in
- * config.yaml (back to Hermes' [hermes-cli] default), the mcp_servers.xenodot callback
+ * Xenomoon's hermes block, the API_SERVER_* lines in ~/.hermes/.env, the toolset edits in
+ * config.yaml (back to Hermes' [hermes-cli] default), the mcp_servers.xenomoon callback
  * registration, and the partner SOUL.md (only if it's still unmodified). Leaves Hermes installed
  * and your model / provider / Portal auth untouched. */
 function resetSetup() {
-  console.log("Xenodot · removing the Hermes setup\n");
-  unwireXenodot();
+  console.log("Xenomoon · removing the Hermes setup\n");
+  unwireXenomoon();
 
   try {
     // Disable the API server, but KEEP API_SERVER_KEY: it's the gateway's password, loaded
@@ -442,14 +442,14 @@ function resetSetup() {
     );
   }
 
-  // Remove the MCP callback registration (its whole mcp_servers.xenodot block). `hermes mcp
+  // Remove the MCP callback registration (its whole mcp_servers.xenomoon block). `hermes mcp
   // remove` edits the YAML correctly; its toolset alias was already dropped with api_server above.
   {
-    const r = spawnSync("hermes", ["mcp", "remove", "xenodot"], { stdio: "ignore" });
+    const r = spawnSync("hermes", ["mcp", "remove", "xenomoon"], { stdio: "ignore" });
     console.log(
       r.status === 0
-        ? "✓ Removed the mcp_servers.xenodot callback registration."
-        : "• No mcp_servers.xenodot to remove (already clean).",
+        ? "✓ Removed the mcp_servers.xenomoon callback registration."
+        : "• No mcp_servers.xenomoon to remove (already clean).",
     );
   }
 
@@ -460,7 +460,7 @@ function resetSetup() {
     const template = readFileSync(SOUL_TEMPLATE, "utf8");
     if (soul.trim() === template.trim()) {
       rmSync(SOUL_FILE);
-      console.log("✓ Removed the Xenodot partner SOUL.md (back to Hermes' built-in default).");
+      console.log("✓ Removed the Xenomoon partner SOUL.md (back to Hermes' built-in default).");
     } else {
       console.log(`• Left ${SOUL_FILE} in place (you customized it).`);
     }
@@ -489,7 +489,7 @@ async function main() {
     resetSetup();
     return;
   }
-  console.log("Xenodot · guided Hermes setup (no wizard)\n");
+  console.log("Xenomoon · guided Hermes setup (no wizard)\n");
   const rl = createInterface({ input: stdin, output: stdout });
   try {
     if (!(await ensureInstalled(rl))) return;
@@ -498,7 +498,7 @@ async function main() {
     removeLegacyCallback();
     ensureSoul();
     printAuthGuidance();
-    wireXenodot(key);
+    wireXenomoon(key);
     printNext();
   } finally {
     rl.close();

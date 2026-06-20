@@ -24,7 +24,7 @@ function kickoffTurn(goal) {
       "Evaluate this goal now: restate it in one line, ask ONLY truly blocking " +
       "clarifications (via mcp__ui__form / AskUserQuestion — keep it minimal), then break " +
       "it into ordered board tasks (mcp__ui__tasks) and dispatch the first slice to the " +
-      "right Xenodot. You are self-driving toward this goal; pause only when genuinely " +
+      "right Xenomoon. You are self-driving toward this goal; pause only when genuinely " +
       "blocked. When you judge it achieved, report and confirm with the user before stopping.",
   );
 }

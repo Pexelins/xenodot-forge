@@ -1,6 +1,6 @@
 # Roadmap — First-Person Shooter POC (active)
 
-> **The next end-to-end proof for the Xenodot Forge pipeline: a playable first-person shooter
+> **The next end-to-end proof for the Xenomoon Forge pipeline: a playable first-person shooter
 > in the 3D-pixel-art style.** Builds on the completed foundation POC (`first_game.md`) and
 > replaces the retired apartment idea (`itch_demo.md`).
 >
@@ -14,7 +14,7 @@
 > This is sanctioned by the camera convention in `CLAUDE.md` (projection is genre-dependent).
 >
 > **Single source of truth:** edit this file here, in the game repo. `npm run claude:sync`
-> (wired into xenodot-forge's pre-commit) auto-mirrors `docs/roadmap/` → `xenodot-forge/docs/roadmap/`.
+> (wired into xenomoon-forge's pre-commit) auto-mirrors `docs/roadmap/` → `xenomoon-forge/docs/roadmap/`.
 > Do NOT hand-edit the framework copy — it is overwritten on sync.
 
 ## How to read this roadmap

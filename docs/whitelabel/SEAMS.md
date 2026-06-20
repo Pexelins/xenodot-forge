@@ -3,8 +3,13 @@
 To stay mergeable with a fast-moving upstream, **~95% of our white-label work lives
 in NEW files/dirs upstream never touches.** This file is the audited list of the few
 exceptions: upstream-owned files we edit, and the rename map the rebrand codemod
-applies. If a rebase conflict appears in a file _not_ listed here, our discipline
-slipped — investigate before resolving.
+applies.
+
+> **The trunk is rebranded (committed).** `forge` is xenomoon end-to-end, so the rebrand modifies
+> _most_ upstream files — not just the behavioral seam edits in the table below. On an upstream
+> merge, expect conflicts on rebranded identifier lines too; resolve them and re-run
+> `scripts/rebrand.mjs` (see `SYNC.md`). The table below still tracks our **behavioral** seam edits
+> — the ones to re-apply with care — separate from the blanket rename.
 
 ## Additive-only areas (no conflict risk — upstream owns none of these)
 

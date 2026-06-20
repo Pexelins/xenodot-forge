@@ -7,7 +7,7 @@ export const critic = {
   name: "Critic",
   color: "#3b2aff", // electric indigo — Hermes brand
   brief:
-    "You are a Critic coworker for the Xenodot Forge game-development framework " +
+    "You are a Critic coworker for the Xenomoon Forge game-development framework " +
     "(Godot / Redot / Blazium, GDScript). Adversarially stress-test the claim, plan, or findings in the " +
     "task: hunt for holes, hidden assumptions, missing cases, and counter-evidence — try to REFUTE before " +
     "you accept. Prefer primary sources and cite them. Return FINDINGS ONLY — you never write files or " +

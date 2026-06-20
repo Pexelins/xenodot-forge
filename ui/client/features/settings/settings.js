@@ -1,7 +1,7 @@
 // Settings panel — the home of the external Hermes researcher switch and the optional
 // Codex code-reviewer switch. Reads the secret-free public config from /api/state, writes
 // changes back via POST /api/settings (which merges the `hermes` / `codex` blocks into
-// .xenodot.json and takes effect immediately — the server re-reads each per call). The
+// .xenomoon.json and takes effect immediately — the server re-reads each per call). The
 // Hermes API key is write-only here: it's never sent back to the browser (we show only
 // whether one is saved), and a blank key field on save keeps the existing key. Codex has
 // no secret to manage — its auth lives in the local `codex` CLI (`codex login`).

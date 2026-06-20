@@ -40,7 +40,7 @@
  * @property {string} [title]
  * @property {string} [description]
  * @property {string} [subagent_type]
- * @property {boolean} [run_in_background] - hive backgrounds this Xenodot (Task/Agent input)
+ * @property {boolean} [run_in_background] - hive backgrounds this Xenomoon (Task/Agent input)
  * @property {Todo[]} [todos]
  * @property {Question[]} [questions]
  */
@@ -84,7 +84,7 @@
 
 // ---------- Tasks (persistent orchestrator to-do board) ----------
 /**
- * A task in the right-rail board, persisted to <project>/.xenodot/tasks.json.
+ * A task in the right-rail board, persisted to <project>/.xenomoon/tasks.json.
  * @typedef {object} Task
  * @property {string} id - short slug, e.g. "t3"
  * @property {string} title
@@ -100,7 +100,7 @@
 
 // ---------- Promotions (game-local → framework plugin) ----------
 /**
- * A promotion request, persisted to <project>/.xenodot/promotions.json — the
+ * A promotion request, persisted to <project>/.xenomoon/promotions.json — the
  * deterministic record of a capability asked to be promoted into the plugin.
  * @typedef {object} Promotion
  * @property {string} id - short slug, e.g. "p3"
@@ -114,7 +114,7 @@
 
 // ---------- Autonomous Mode ----------
 /** A standing "Main Goal" the hive self-drives toward, with a recurring check loop.
- * Persisted in .xenodot/autonomous.json; mirrored to the client store for the header flag.
+ * Persisted in .xenomoon/autonomous.json; mirrored to the client store for the header flag.
  * @typedef {object} Autonomous
  * @property {boolean} active        - the ON/OFF flag the header badge reflects
  * @property {string} goal           - the Main Goal text

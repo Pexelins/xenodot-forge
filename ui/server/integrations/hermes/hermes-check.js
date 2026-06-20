@@ -1,5 +1,5 @@
 // Hermes connection probe — the fast feedback loop for "is my gateway reachable
-// from Xenodot?". Hits the gateway's `GET /v1/models` (cheap, no model run, no
+// from Xenomoon?". Hits the gateway's `GET /v1/models` (cheap, no model run, no
 // billing) with the bearer key, so you can confirm URL + API_SERVER_KEY are right
 // BEFORE going three approvals deep into a Hive loop.
 //
@@ -11,7 +11,7 @@
 //
 // Remember the two keys (see HERMES.md): the value tested here is the LOCAL
 // `API_SERVER_KEY` you invented for your gateway — NOT the billable provider key,
-// which lives inside Hermes (`hermes setup`) and is never seen by Xenodot.
+// which lives inside Hermes (`hermes setup`) and is never seen by Xenomoon.
 import { pathToFileURL } from "node:url";
 import { parseJSON } from "../../../lib/json.js";
 import { getHermesConfig } from "../../core/config.js";

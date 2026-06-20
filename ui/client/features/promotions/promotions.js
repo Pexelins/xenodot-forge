@@ -1,5 +1,5 @@
 // Promotions board — the right-rail surface for capability promotion requests
-// (filed by mcp__ui__promote, recorded in .xenodot/promotions.json). Low-frequency,
+// (filed by mcp__ui__promote, recorded in .xenomoon/promotions.json). Low-frequency,
 // so a plain full re-render on each snapshot is fine (no keyed reconciler). The user
 // approves/rejects here; the actual file move is a deliberate `npm run promote --
 // --pending` step, so an approved row shows that hint rather than a spinner.

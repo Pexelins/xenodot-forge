@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 
 const gitDir = execFileSync("git", ["rev-parse", "--git-dir"], { encoding: "utf8" }).trim();
-const marker = path.join(gitDir, "XENODOT_RELEASE");
+const marker = path.join(gitDir, "XENOMOON_RELEASE");
 if (!existsSync(marker)) process.exit(0);
 
 const tag = readFileSync(marker, "utf8").trim();

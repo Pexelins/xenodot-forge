@@ -1,6 +1,6 @@
 # Codex — optional, on-demand code review
 
-Xenodot can use **OpenAI's Codex** as a second pair of eyes on code, for **both** the game
+Xenomoon can use **OpenAI's Codex** as a second pair of eyes on code, for **both** the game
 (GDScript under your project) and the framework itself. It's **off by default**, gated, and
 lives **outside** the framework spine (`plugin/`) — nothing ships to games unless you turn it
 on. This mirrors the [Hermes](HERMES.md) pattern: a separate program with its **own model and
@@ -20,7 +20,7 @@ the `codex:codex-rescue` subagent, and its structured review output, unchanged.
 - The **`@openai/codex` CLI** installed (`npm i -g @openai/codex`).
 - A **`codex login`** session — either a **ChatGPT account with Codex access** _or_ an **OpenAI
   API key**. Codex owns the credential (stored in `auth.json` under `CODEX_HOME`, default
-  `~/.codex`); **Xenodot never sees or stores it**.
+  `~/.codex`); **Xenomoon never sees or stores it**.
 - A **model the account can actually route** — see [Auth & models](#auth--models). On a ChatGPT
   login this is the common gotcha: the `*-codex` model variants are **rejected**, so reviews
   fail until you point Codex at a general model like `gpt-5.5`. (`codex login` succeeding does
@@ -46,7 +46,7 @@ button that runs the same readiness probe).
 
 - The clone lands in `vendor/codex-plugin-cc/` (gitignored). The loadable plugin root is
   `vendor/codex-plugin-cc/plugins/codex/`.
-- `.xenodot.json` gets a `codex` block: `{ "enabled": true }`. That's the whole switch — no
+- `.xenomoon.json` gets a `codex` block: `{ "enabled": true }`. That's the whole switch — no
   keys, no URLs. Override per-process with `CODEX_ENABLED=true|false`.
 - `session.js` appends the plugin to the SDK `plugins` array **only** when `codex.enabled`
   **and** the plugin is actually vendored. Disabled or absent → nothing changes.

@@ -9,15 +9,15 @@
 # Sourced art (large/binary) — not repo content
 assets/
 
-# Framework working files — generated from the xenodot plugin, not repo content
+# Framework working files — generated from the xenomoon plugin, not repo content
 /tools/
 /library
 # External shared-asset library — symlink to free-library example assets kept outside the game
 /x-shared-assets
 /transcripts/
 
-# Xenodot task board (per-game runtime state)
-.xenodot/
+# Xenomoon task board (per-game runtime state)
+.xenomoon/
 
 # Claude Code per-project runtime data (memory/sessions)
 .claude/projects/

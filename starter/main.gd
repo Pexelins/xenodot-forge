@@ -5,4 +5,4 @@ extends Node
 
 
 func _ready() -> void:
-	print("Xenodot starter running. Add a level under LevelHost to begin.")
+	print("Xenomoon starter running. Add a level under LevelHost to begin.")

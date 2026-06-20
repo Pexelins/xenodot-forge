@@ -1,11 +1,11 @@
 // Automated onboarding test — proves a clean consumer can go from a fresh clone of the
 // framework to a wired, runnable game, with the game staying PURE: the framework loads from
-// the xenodot plugin, nothing is copied in. Bare-node, no test runner (same style as
+// the xenomoon plugin, nothing is copied in. Bare-node, no test runner (same style as
 // ui/reducer.check.js):
 //   node ui/server/onboarding.check.js        # Tier 1; Tier 2 runs if Godot is found
 //
 // Tier 1 (deterministic, no Claude/Godot): export the framework EXACTLY as a forker
-//   receives it — `git archive` of the tracked tree, so node_modules, .xenodot.json and
+//   receives it — `git archive` of the tracked tree, so node_modules, .xenomoon.json and
 //   logs are excluded and an un-committed file is invisible (the real "did we ship it?"
 //   test). Then run `forge new` into a fresh game and assert the plugin ships, the game is
 //   a valid project with tools materialized + library linked, and NO framework agents/skills
@@ -71,7 +71,7 @@ try {
   const pluginAgents = path.join(fw, "plugin", "agents");
   const pluginSkills = path.join(fw, "plugin", "skills");
 
-  check("framework ships the xenodot plugin and starter (committed)", () => {
+  check("framework ships the xenomoon plugin and starter (committed)", () => {
     assert.ok(
       existsSync(path.join(fw, "plugin", ".claude-plugin", "plugin.json")),
       "plugin/.claude-plugin/plugin.json must ship",

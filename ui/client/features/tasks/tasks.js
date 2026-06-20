@@ -138,7 +138,7 @@ function createRow(t) {
 }
 
 /** Stamp the owner chip. An agent-owned task that knows its creator names the
- * Xenodot that owns it — a filled sigil (the agent's initial) plus its role,
+ * Xenomoon that owns it — a filled sigil (the agent's initial) plus its role,
  * tinted by that agent's identity color and echoed as a left accent on the row,
  * so the board tracks the same agent by the same hue the running strip and
  * activity log use. User-owned tasks read "You"; legacy agent tasks with no
@@ -148,7 +148,7 @@ function updateOwnerChip(row, chip, t) {
   const agent = t.owner === "agent" ? t.agent : undefined;
   chip.replaceChildren();
   if (t.owner === "agent") {
-    // Always a stamped tag (sigil + label). A known creator names its Xenodot —
+    // Always a stamped tag (sigil + label). A known creator names its Xenomoon —
     // role, identity color, and a matching row accent. An unattributed agent task
     // (e.g. a legacy entry) gets a generic "Agent" stamp in the default accent.
     row.classList.toggle("identified", Boolean(agent));

@@ -1,8 +1,8 @@
 // Generate the per-game facts manifest — the deterministic answer to questions agents otherwise
 // re-derive on every task: where is the engine binary, what's the render config, how do I
 // build/verify/drive this game, what tools exist. Written into the game tree at
-// .xenodot/manifest.json (gitignored, like tools/) by prepareGame() — so it regenerates on server
-// startup, `doctor`, and `forge new`, and is exposed to the session as $XENODOT_MANIFEST.
+// .xenomoon/manifest.json (gitignored, like tools/) by prepareGame() — so it regenerates on server
+// startup, `doctor`, and `forge new`, and is exposed to the session as $XENOMOON_MANIFEST.
 //
 // It does NOT regenerate tools/CAPABILITIES.md — that registry is a curated framework artifact
 // (rich invocation docs) copied in by materializeTools; the manifest only POINTS at it and lists
@@ -93,7 +93,7 @@ function listTools(toolsDir) {
   }
 }
 
-/** Write <projectDir>/.xenodot/manifest.json with the deterministic project facts. Cheap (parse
+/** Write <projectDir>/.xenomoon/manifest.json with the deterministic project facts. Cheap (parse
  * one project.godot, list one dir) and safe when project.godot is absent (a fresh starter) — the
  * engine/commands block is still useful. @param {string} projectDir @returns {Manifest} */
 export function generateManifest(projectDir) {
@@ -135,7 +135,7 @@ export function generateManifest(projectDir) {
     },
   };
 
-  const outDir = path.join(projectDir, ".xenodot");
+  const outDir = path.join(projectDir, ".xenomoon");
   mkdirSync(outDir, { recursive: true });
   writeFileSync(path.join(outDir, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
   return manifest;
@@ -147,7 +147,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const target = process.argv[2] ? path.resolve(process.argv[2]) : PROJECT_DIR;
   const m = generateManifest(target);
   console.log(
-    `gen-manifest: ${target}/.xenodot/manifest.json — engine ${m.engine.name} ${m.engine.version ?? "?"} ` +
+    `gen-manifest: ${target}/.xenomoon/manifest.json — engine ${m.engine.name} ${m.engine.version ?? "?"} ` +
       `(bin ${m.engine.bin ?? "unresolved"}), ${m.input_actions.length} input actions, ` +
       `${m.capabilities.tools.length} tools.`,
   );

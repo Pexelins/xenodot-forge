@@ -1,4 +1,4 @@
-# gdstyle.toml — Xenodot Forge default GDScript lint config.
+# gdstyle.toml — Xenomoon Forge default GDScript lint config.
 #
 # gdstyle (https://github.com/atelico/gdstyle) is the IN-EDITOR linter: live,
 # fixable diagnostics in the Godot editor (bottom panel) + `gdstyle fmt`. Install

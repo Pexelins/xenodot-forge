@@ -8,7 +8,7 @@ import { subscribe, getState } from "../../core/store.js";
 
 /** A compact identity tag for the stream: the agent's struck sigil + its role,
  * painted in the agent's color — the activity-panel echo of the task board's
- * owner stamp. The shared "Xenodot" brand prefix is dropped (it's every agent's,
+ * owner stamp. The shared "Xenomoon" brand prefix is dropped (it's every agent's,
  * so it reads as noise here); the full name rides on the title for hover. Pure
  * and deterministic from the agent id, so the agent itself sets nothing.
  * @param {string} name @returns {HTMLElement} */

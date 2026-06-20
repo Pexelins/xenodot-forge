@@ -8,7 +8,7 @@ upstream owns nothing here, so it never causes a merge conflict on a sync.
 
 ## Selecting the active domain
 
-First hit wins: `XENODOT_DOMAIN` env → `.xenodot.json` `"domain"` key → `godot` (default).
+First hit wins: `XENOMOON_DOMAIN` env → `.xenomoon.json` `"domain"` key → `godot` (default).
 
 ## What a pack declares (`domains/<name>/domain.json`)
 

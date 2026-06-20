@@ -11,7 +11,7 @@
 //   npm run new -- ../mygame                 (godot by default; scaffold or wire in place)
 //   npm run new -- ../myapp --domain=app     (install the `app` domain into an existing project)
 //
-// The chosen domain is written as a project-owned lock (.xenodot-project.json), committed with
+// The chosen domain is written as a project-owned lock (.xenomoon-project.json), committed with
 // the project so the binding travels and the framework can't later drive it as the wrong domain.
 import {
   existsSync,
@@ -61,7 +61,7 @@ if (domainFlag && existingLock && domainFlag !== existingLock) {
 const domainName = domainFlag ?? existingLock ?? DEFAULT_DOMAIN;
 const DOMAIN = loadDomain(domainName, FRAMEWORK_DIR);
 // Propagate to the spawned child steps so they resolve the same domain (they also read the lock).
-process.env.XENODOT_DOMAIN = domainName;
+process.env.XENOMOON_DOMAIN = domainName;
 
 /** Run a child step, inheriting stdio so its output streams through. @param {string[]} args */
 const node = (...args) => execFileSync("node", args, { stdio: "inherit" });
@@ -76,7 +76,7 @@ function ensureIgnores(dir) {
     "/library",
     "/x-shared-assets",
     "/transcripts/",
-    ".xenodot/",
+    ".xenomoon/",
     ".claude/projects/",
   ];
   let cur = "";
@@ -89,7 +89,7 @@ function ensureIgnores(dir) {
   const missing = need.filter((p) => !lines.includes(p));
   if (!missing.length) return;
   const block =
-    "\n# Xenodot Forge generated/working files — not repo content\n" + missing.join("\n") + "\n";
+    "\n# Xenomoon Forge generated/working files — not repo content\n" + missing.join("\n") + "\n";
   if (cur) appendFileSync(file, block);
   else writeFileSync(file, block.trimStart());
   console.log(`new: added ${missing.length} ignore rule(s) to ${file}`);
@@ -117,7 +117,7 @@ if (existsSync(marker)) {
 }
 ensureIgnores(target);
 
-// 2. Remember the path (writes .xenodot.json).
+// 2. Remember the path (writes .xenomoon.json).
 node(path.join(here, "setup.js"), target);
 
 // 3. Materialize the domain's per-project files: tools/ copied, library/ symlinked (if any).

@@ -7,7 +7,7 @@ import { fetchJSON } from "../../../lib/json.js";
 import { view } from "../../core/state.js";
 import { paint, agentLabel, agentInitial } from "../agents/agents.js";
 
-const TAB_KEY = "xenodot-side-tab";
+const TAB_KEY = "xenomoon-side-tab";
 
 /** Every selectable tab in the "More" section (Tasks now lives in its own
  * rail section, not here). A stale/removed value coerces to the default. */
@@ -69,7 +69,7 @@ function newItemBtn(tab, label) {
   return btn;
 }
 
-/** The Agents pane: the project's cast, each Xenodot shown by its identity sigil
+/** The Agents pane: the project's cast, each Xenomoon shown by its identity sigil
  * and branded name (so the roster reads like the running strip and activity log
  * — one agent, one color, everywhere). The literal id the SDK routes on (and the
  * model) trail as the dim caption. @param {HTMLElement} tree @param {import("../../../lib/types.js").ProjectState} s */

@@ -14,7 +14,7 @@ When that findings message arrives, treat it as its OWN lead — not a footnote 
 
 ### Feedback
 
-After the matching `xenodot:*-researcher` has reviewed the findings and written the verdict to `library/verdicts/`, call `mcp__ui__hermes_feedback` with:
+After the matching `xenomoon:*-researcher` has reviewed the findings and written the verdict to `library/verdicts/`, call `mcp__ui__hermes_feedback` with:
 
 - `runId` — the run id from the findings message header (`run <id>`)
 - `verdict` — one of: `"useful"` (cited, actionable, novel); `"partial"` (some findings helped, others were stale/off-topic); `"not-useful"` (off-topic, uncited, or no value found)

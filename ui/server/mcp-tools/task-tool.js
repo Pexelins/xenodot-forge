@@ -17,7 +17,7 @@ export function makeTaskTool(send) {
   return tool(
     "tasks",
     "Manage your persistent task list — the to-do board shown in the UI's right rail and " +
-      "stored at .xenodot/tasks.json. Use it to track your own multi-step work " +
+      "stored at .xenomoon/tasks.json. Use it to track your own multi-step work " +
       '(owner "agent") and to hand explicit to-dos to the user (owner "user"). It does ' +
       "NOT pause the session. Keep tasks small and discrete. Every result lists the tasks " +
       "still OPEN, so you can always see what's unfinished. Before you hand off or end " +

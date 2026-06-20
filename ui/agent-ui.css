@@ -1,6 +1,6 @@
 /* ============================================================
-   Xenodot Forge — UI styles
-   "The Forge Temple": the Xenodot creature's bioluminescent
+   Xenomoon Forge — UI styles
+   "The Forge Temple": the Xenomoon creature's bioluminescent
    workshop. Void-ink maroon-black void, forge-green machine-spirit
    glow, alien-lime hotspots. Sharp corners, stamped labels.
    Official palette (assets/VoidInk_style.md):
@@ -319,7 +319,7 @@ body.resizing iframe {
   letter-spacing: 0.01em;
 }
 
-/* The forge sigil — the Xenodot creature, machine-crowned, lit by its
+/* The forge sigil — the Xenomoon creature, machine-crowned, lit by its
    own machine-spirit glow so it reads off the dark bench. */
 .brand-mark {
   height: 26px;
@@ -2575,7 +2575,7 @@ input.cmd::placeholder {
 }
 
 /* Owner stamp — who the task belongs to, read at a glance. A user task is
-   blue ("You"); an agent task names its Xenodot (a filled sigil + role) in that
+   blue ("You"); an agent task names its Xenomoon (a filled sigil + role) in that
    agent's identity color, the same hue it wears in the running strip and the
    activity log. A legacy agent task with no recorded creator stays plain accent. */
 .owner-chip {
@@ -2606,7 +2606,7 @@ input.cmd::placeholder {
   border-color: color-mix(in oklab, var(--blue) 30%, transparent);
 }
 
-/* An identified agent task — tinted by its Xenodot's color. */
+/* An identified agent task — tinted by its Xenomoon's color. */
 .owner-chip.identified {
   color: var(--agent-color, var(--accent));
   background: color-mix(in oklab, var(--agent-color, var(--accent)) 13%, transparent);
@@ -2629,7 +2629,7 @@ input.cmd::placeholder {
   background: var(--agent-color, var(--accent));
 }
 
-/* The owning Xenodot's color, carried onto the row as a left accent — no reflow
+/* The owning Xenomoon's color, carried onto the row as a left accent — no reflow
    (an inset bar, not a wider border), so a task gaining an agent doesn't shift. */
 .task-row.owner-agent.identified {
   box-shadow: inset 2px 0 0 color-mix(in oklab, var(--agent-color, var(--accent)) 72%, transparent);
@@ -2752,7 +2752,7 @@ input.cmd::placeholder {
 }
 
 /* Identity tag — the activity-panel echo of the task board's owner stamp: a
-   struck sigil + the agent's role (the shared "Xenodot" prefix dropped, since
+   struck sigil + the agent's role (the shared "Xenomoon" prefix dropped, since
    it's every agent's), painted in that agent's color so the stream reads by hue
    at a glance. Inline (not flex) so the role's baseline lines up with the time. */
 .agent-tag {
@@ -2892,7 +2892,7 @@ input.cmd::placeholder {
 
 /* External Hermes coworker personas — one base pill whose hue comes from the persona's `color`,
    set inline as `--hermes-pill` by the activity log (see ui/lib/personas/). Distinct from
-   bash-green/task-purple so relayed progress reads as "not one of our Xenodots". Falls back to
+   bash-green/task-purple so relayed progress reads as "not one of our Xenomoons". Falls back to
    teal when a relay carries no color. Adding a persona needs no CSS. */
 .verb-hermes {
   --hermes-pill: oklch(0.78 0.1 195);

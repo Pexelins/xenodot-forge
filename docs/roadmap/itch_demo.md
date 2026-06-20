@@ -1,4 +1,4 @@
-# Roadmap — itch.io Demo (Xenodot Forge proof-of-pipeline) ⏹ RETIRED (unbuilt idea)
+# Roadmap — itch.io Demo (Xenomoon Forge proof-of-pipeline) ⏹ RETIRED (unbuilt idea)
 
 > **Status: RETIRED — never built. Superseded by [`fps_poc.md`](./fps_poc.md).**
 > This apartment-demo direction was an _idea_ that was scoped but never started (every phase
@@ -7,14 +7,14 @@
 
 ---
 
-> **The first end-to-end proof that the Xenodot Forge pipeline ships a real, public game.**
+> **The first end-to-end proof that the Xenomoon Forge pipeline ships a real, public game.**
 > Target: a furnished, explorable **3D-pixel-art apartment**, playable in-browser **and**
 > downloadable on itch.io. **No win condition** — the apartment, and the way it was built
 > (drawn grid → level-designer → game-designer → godot-dev → godot-verify), are the demo.
 >
 > **Built from a clean clone.** To prove the framework's _distribution_ — not just that it
 > works in the repo where it was developed — the demo is built in a **fresh repo bootstrapped
-> from zero** via the framework's install path (`npm run claude:install` from `xenodot-forge`).
+> from zero** via the framework's install path (`npm run claude:install` from `xenomoon-forge`).
 > Shipping it then proves the full chain: clone the framework → install into an empty repo →
 > drive the pipeline → ship a public game. This is **Track 0**, and it gates everything else.
 >
@@ -22,14 +22,14 @@
 > orthographic follow camera, SubViewport pixel-art rig, sun+shadow lighting, and depth/normal
 > outline post-process are already ✅ and reused as-is.
 >
-> **This doc is hand-mirrored to `xenodot-forge/docs/roadmap/itch_demo.md`** — `npm run claude:sync`
+> **This doc is hand-mirrored to `xenomoon-forge/docs/roadmap/itch_demo.md`** — `npm run claude:sync`
 > does NOT copy `docs/`, so edit both. Keep them identical.
 
 ## Roadmap graph
 
 ```mermaid
 flowchart TD
-    T01["0.1 — Fresh clone &amp; install<br/>clone xenodot-forge, npm install,<br/>claude:install into an empty repo"]
+    T01["0.1 — Fresh clone &amp; install<br/>clone xenomoon-forge, npm install,<br/>claude:install into an empty repo"]
     T02["0.2 — Smoke the pipeline<br/>start UI :3117, agents+skills load,<br/>tiny task → godot-verify passes"]
     BOOT{"GATE: CLEAN BOOTSTRAP<br/>from-zero repo, framework installed,<br/>a verify passes"}
     A1["A1 — Rebuild shell<br/><b>godot-gridmap-level</b><br/>GridMap from current.json,<br/>register in main.gd → F5 walkable"]
@@ -80,8 +80,8 @@ honest POC: not "it works where we built it," but "anyone can install it and shi
 
 | Phase                         | Work                                                                                                                                                                                                                                                                                                                               | Reuses (already exists)                                                                                                    | Status  | Gate (observable)                                                                                            |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------ |
-| **0.1 Fresh clone & install** | Clone `xenodot-forge` into a clean location, `npm install`, then `npm run claude:install` (use `--force` for a clean reset) to populate an **empty** game repo's `.claude/` from the vendored `game-config/` mirror. Also confirms `claude:sync` parity — the mirror must be current or a clean install ships stale agents/skills. | `xenodot-forge/ui/server/claude-install.js`, `ui/server/claude-sync.js`, `.husky/pre-commit`, `xenodot-forge/game-config/` | 🔨 next | A from-zero repo whose `.claude/{agents,skills}` matches source; `git status` clean; install script exits 0. |
-| **0.2 Smoke the pipeline**    | Start the web UI (port 3117), confirm the cloned `.claude/` agents + skills load (forms, permissions, task board render), then run one trivial end-to-end task (e.g. `/quick` tiny change → godot-dev → **godot-verify**) to prove the cloned framework actually drives Godot.                                                     | `xenodot-forge/ui/` (port 3117), skill `quick`, agent `godot-dev`, skill `godot-verify`                                    | 📋      | UI lists the real agents/skills; a one-step task builds + passes `godot-verify` in the fresh repo.           |
+| **0.1 Fresh clone & install** | Clone `xenomoon-forge` into a clean location, `npm install`, then `npm run claude:install` (use `--force` for a clean reset) to populate an **empty** game repo's `.claude/` from the vendored `game-config/` mirror. Also confirms `claude:sync` parity — the mirror must be current or a clean install ships stale agents/skills. | `xenomoon-forge/ui/server/claude-install.js`, `ui/server/claude-sync.js`, `.husky/pre-commit`, `xenomoon-forge/game-config/` | 🔨 next | A from-zero repo whose `.claude/{agents,skills}` matches source; `git status` clean; install script exits 0. |
+| **0.2 Smoke the pipeline**    | Start the web UI (port 3117), confirm the cloned `.claude/` agents + skills load (forms, permissions, task board render), then run one trivial end-to-end task (e.g. `/quick` tiny change → godot-dev → **godot-verify**) to prove the cloned framework actually drives Godot.                                                     | `xenomoon-forge/ui/` (port 3117), skill `quick`, agent `godot-dev`, skill `godot-verify`                                    | 📋      | UI lists the real agents/skills; a one-step task builds + passes `godot-verify` in the fresh repo.           |
 | **GATE: CLEAN BOOTSTRAP**     | —                                                                                                                                                                                                                                                                                                                                  | —                                                                                                                          | ⛔      | A from-zero repo with the framework installed and a verify passing — the apartment (Track A) is built here.  |
 
 ## Track A — Build the playable space (sequential)

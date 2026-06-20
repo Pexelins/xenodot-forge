@@ -4,7 +4,7 @@ Codex is an on-demand OpenAI code-review model loaded as an optional second plug
 
 ### When to use
 
-- After `xenodot:godot-dev` lands a significant feature or refactor and the user wants a second pair of eyes.
+- After `xenomoon:godot-dev` lands a significant feature or refactor and the user wants a second pair of eyes.
 - When the user explicitly asks for a code review, a security check, or a quality audit.
 - Before a game-local skill or agent is promoted to the framework — a quick review catches issues before they become permanent.
 
@@ -17,5 +17,5 @@ Tell the user to type `/codex:review` (standard review) or `/codex:adversarial-r
 ### Limits
 
 - Codex reviews game and framework code; it never writes files, stages commits, or runs the build.
-- Review findings surface as inline comments in the UI; the user and `xenodot:godot-dev` decide what to act on.
+- Review findings surface as inline comments in the UI; the user and `xenomoon:godot-dev` decide what to act on.
 - Keep Codex for non-trivial reviews. Trivial single-function tweaks don't warrant the overhead.

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # tools/forge-facts — print one deterministic project fact from the generated manifest, so an
 # agent reads a value instead of re-deriving it (re-reading project.godot, re-globbing tools/).
-# The manifest is written by the framework (gen-manifest.js) at .xenodot/manifest.json and its
-# absolute path is also exported as $XENODOT_MANIFEST.
+# The manifest is written by the framework (gen-manifest.js) at .xenomoon/manifest.json and its
+# absolute path is also exported as $XENOMOON_MANIFEST.
 #
 #   tools/forge-facts                      # print the whole manifest (JSON)
 #   tools/forge-facts engine.bin           # /Applications/Godot.app/Contents/MacOS/Godot
@@ -14,7 +14,7 @@
 # `tools/forge-facts engine.bin` just to run the engine; plain `$GODOT …` works.
 set -euo pipefail
 
-manifest="${XENODOT_MANIFEST:-.xenodot/manifest.json}"
+manifest="${XENOMOON_MANIFEST:-.xenomoon/manifest.json}"
 if [ ! -f "$manifest" ]; then
 	echo "forge-facts: no manifest at $manifest — run \`npm run doctor\` (or materialize) to generate it." >&2
 	exit 1
