@@ -1,7 +1,8 @@
 {
   "name": "godot",
   "label": "Godot",
-  "description": "Reference domain: build Godot-family (Godot / Redot / Blazium) games. Reproduces the framework's original behavior — selecting it changes nothing.",
+  "description": "Reference domain: build Godot-family (Godot / Redot / Blazium) games. Reproduces the framework's original behavior — selecting it changes nothing. This is the upstream-compat default, not a xenomoon product package.",
+  "populated": true,
   "engine": {
     "name": "godot",
     "projectFile": "project.godot"
@@ -10,5 +11,14 @@
     "scenes": [".tscn"],
     "scripts": [".gd"]
   },
-  "starter": "starter"
+  "starter": "starter",
+  "plugin": "plugin",
+  "orchestrator": "ui/orchestrator.md",
+  "commands": {
+    "validate": "tools/validate.sh",
+    "verify_scene": "$GODOT --headless --path . --script tools/verify_scene.gd",
+    "smoke": "$GODOT --headless --path . --quit-after 3",
+    "render_check": "$GODOT --path . --resolution 640x360 -s tools/verify_render.gd",
+    "screenshot": "$GODOT --path . --resolution 640x360 -s tools/capture_screenshot.gd"
+  }
 }

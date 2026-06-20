@@ -14,11 +14,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const UI_DIR = path.join(__dirname, "..", "..");
 /** The framework root (the folder you cloned/forked). */
 export const FRAMEWORK_DIR = path.join(UI_DIR, "..");
-/** The framework's capabilities (agents, skills, tools, hooks) packaged as a local
- * Claude Code plugin — the single source of truth. Loaded into every session via the
- * SDK `plugins` option (see session.js), so a game project needs no copied agents or
- * skills; it stays pure game and the plugin provides the framework regardless of cwd. */
-export const FRAMEWORK_PLUGIN_DIR = path.join(FRAMEWORK_DIR, "plugin");
 /** Saved-path config written by `npm run setup` — gitignored, so each fork
  * remembers its own game project without committing it. */
 export const CONFIG_FILE = path.join(FRAMEWORK_DIR, ".xenodot.json");
@@ -69,6 +64,13 @@ export const DOMAIN = loadDomain(
   process.env.XENODOT_DOMAIN ?? SAVED.domain ?? DEFAULT_DOMAIN,
   FRAMEWORK_DIR,
 );
+
+/** The active domain's capability plugin (agents, skills, tools, hooks) packaged as a local
+ * Claude Code plugin — the single source of truth, loaded into every session via the SDK
+ * `plugins` option (see session.js) so a project needs no copied capabilities; it stays pure
+ * and the plugin provides the framework regardless of cwd. The path comes from the domain pack
+ * (`godot` → the top-level `plugin/`); a non-godot domain ships its own under `domains/<name>/`. */
+export const FRAMEWORK_PLUGIN_DIR = path.join(FRAMEWORK_DIR, DOMAIN.plugin);
 
 /** Where the framework reads the game project from. The framework is
  * independent of the project: it points at this folder in place and never
@@ -400,7 +402,12 @@ export const MODEL = args.find((a) => a.startsWith("--model="))?.split("=")[1] ?
 export const EFFORT = /** @type {import("@anthropic-ai/claude-agent-sdk").EffortLevel} */ (
   args.find((a) => a.startsWith("--effort="))?.split("=")[1] ?? "medium"
 );
-export const ORCHESTRATOR_PROMPT = readFileSync(path.join(UI_DIR, "orchestrator.md"), "utf8");
+// The orchestrator routing prompt comes from the active domain pack (`godot` → ui/orchestrator.md);
+// a non-godot domain ships its own under domains/<name>/. Read once at startup.
+export const ORCHESTRATOR_PROMPT = readFileSync(
+  path.join(FRAMEWORK_DIR, DOMAIN.orchestrator),
+  "utf8",
+);
 export const HERMES_BLOCK = readFileSync(path.join(UI_DIR, "hermes-block.md"), "utf8");
 export const CODEX_BLOCK = readFileSync(path.join(UI_DIR, "codex-block.md"), "utf8");
 

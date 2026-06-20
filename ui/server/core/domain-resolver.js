@@ -24,20 +24,28 @@ const SELF_FRAMEWORK_DIR = path.join(SELF_DIR, "..", "..", "..");
  * @typedef {Object} DomainDescriptor
  * @property {string} name      the domain's id (matches its domains/<name>/ folder)
  * @property {string} label     human label for UI/CLI copy
+ * @property {boolean} populated whether the domain ships pre-baked capabilities (godot) or
+ *           starts empty and learns the project (new domains). Drives whether `doctor`'s
+ *           agent/skill/tool checks are hard or informational.
  * @property {{ name: string, projectFile: string }} engine
  *           on-disk project marker + engine/runtime name
  * @property {{ scenes: string[], scripts: string[] }} inventory
  *           file extensions the live project inventory scans for
  * @property {string} starter   starter folder to scaffold, relative to the framework dir
+ * @property {string} plugin    capability plugin dir, relative to the framework dir
+ * @property {string} orchestrator routing-prompt file, relative to the framework dir
+ * @property {Record<string,string>} commands build/verify commands written into the manifest
  */
 
 /** Raw parsed domain.json — every leaf is `unknown` until validated. */
-/** @typedef {{ name?: unknown, label?: unknown, engine?: { name?: unknown, projectFile?: unknown }, inventory?: { scenes?: unknown, scripts?: unknown }, starter?: unknown }} RawDomain */
+/** @typedef {{ name?: unknown, label?: unknown, populated?: unknown, engine?: { name?: unknown, projectFile?: unknown }, inventory?: { scenes?: unknown, scripts?: unknown }, starter?: unknown, plugin?: unknown, orchestrator?: unknown, commands?: unknown }} RawDomain */
 
 /** @param {unknown} v @returns {boolean} */
 const isNonEmptyString = (v) => typeof v === "string" && v.length > 0;
 /** @param {unknown} v @param {string} fallback @returns {string} */
 const strOr = (v, fallback) => (typeof v === "string" && v ? v : fallback);
+/** A plain object (commands map) or absent — rejects arrays/primitives. @param {unknown} v @returns {boolean} */
+const isObjectOrAbsent = (v) => v == null || (typeof v === "object" && !Array.isArray(v));
 
 /** Validate parsed domain.json and return the normalized descriptor. Throws listing every
  *  missing/invalid field at once. @param {RawDomain} raw @param {string} name
@@ -48,6 +56,9 @@ function normalizeDescriptor(raw, name) {
   const scenes = raw.inventory?.scenes;
   const scripts = raw.inventory?.scripts;
   const starter = raw.starter;
+  const plugin = raw.plugin;
+  const orchestrator = raw.orchestrator;
+  const commands = raw.commands;
 
   const errs = [];
   if (!isNonEmptyString(engineName)) errs.push("engine.name");
@@ -55,6 +66,9 @@ function normalizeDescriptor(raw, name) {
   if (!Array.isArray(scenes)) errs.push("inventory.scenes[]");
   if (!Array.isArray(scripts)) errs.push("inventory.scripts[]");
   if (!isNonEmptyString(starter)) errs.push("starter");
+  if (!isNonEmptyString(plugin)) errs.push("plugin");
+  if (!isNonEmptyString(orchestrator)) errs.push("orchestrator");
+  if (!isObjectOrAbsent(commands)) errs.push("commands (object)");
   if (errs.length) {
     throw new Error(`domain "${name}": domain.json missing/invalid fields: ${errs.join(", ")}`);
   }
@@ -62,6 +76,9 @@ function normalizeDescriptor(raw, name) {
   return {
     name: strOr(raw.name, name),
     label: strOr(raw.label, name.charAt(0).toUpperCase() + name.slice(1)),
+    // Empty (learning) domains default to NOT populated; only a domain that ships pre-baked
+    // capabilities (godot) declares populated:true and so stays under doctor's hard checks.
+    populated: raw.populated === true,
     engine: {
       name: /** @type {string} */ (engineName),
       projectFile: /** @type {string} */ (projectFile),
@@ -71,6 +88,9 @@ function normalizeDescriptor(raw, name) {
       scripts: /** @type {string[]} */ (scripts),
     },
     starter: /** @type {string} */ (starter),
+    plugin: /** @type {string} */ (plugin),
+    orchestrator: /** @type {string} */ (orchestrator),
+    commands: /** @type {Record<string,string>} */ (commands ?? {}),
   };
 }
 

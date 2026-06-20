@@ -13,7 +13,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { ENGINE, RES_ASSET_MOUNT } from "../core/config.js";
+import { ENGINE, DOMAIN, RES_ASSET_MOUNT } from "../core/config.js";
 
 /** @typedef {{ renderer: string|null, engine_version: string|null, viewport_width: number|null,
  *   viewport_height: number|null, stretch_mode: string, stretch_aspect: string,
@@ -116,14 +116,10 @@ export function generateManifest(projectDir) {
     },
     // Effective render pipeline — read this instead of re-parsing project.godot's [display].
     render,
-    // Canonical build/verify/drive commands (the "/run" payload). $GODOT is preset in the session.
-    commands: {
-      validate: "tools/validate.sh",
-      verify_scene: "$GODOT --headless --path . --script tools/verify_scene.gd",
-      smoke: "$GODOT --headless --path . --quit-after 3",
-      render_check: "$GODOT --path . --resolution 640x360 -s tools/verify_render.gd",
-      screenshot: "$GODOT --path . --resolution 640x360 -s tools/capture_screenshot.gd",
-    },
+    // Canonical build/verify/drive commands (the "/run" payload) — declared by the active
+    // domain pack (godot's are the $GODOT verify gate, preset in the session; a new domain
+    // ships its own, possibly none while it's still empty).
+    commands: DOMAIN.commands,
     input_actions: inputActions,
     layout: {
       entry_point: mainScene,
