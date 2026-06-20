@@ -27,18 +27,28 @@ code, plus why it's unavoidable.
 | `ui/server/core/http/project-state.js` | Import `DOMAIN`; scan `DOMAIN.inventory.scenes` / `.scripts` instead of literal `.tscn` / `.gd`.                                                                    | The live inventory is computed here; extensions are per-domain.                              |
 | `ui/server/cli/new.js`                 | Resolve the domain; detect `DOMAIN.engine.projectFile` and scaffold `DOMAIN.starter` instead of hardcoded `project.godot` / `starter`.                              | Scaffolding picks the project marker + starter, which are per-domain.                        |
 
+| `ui/server/cli/doctor.js` | Capability + `validate.sh` checks are HARD only when `DOMAIN.populated`; an empty domain installs/runs cleanly. | Doctor gates `new`/CI; emptiness is a legal starting state for a learning domain. |
+| `ui/server/cli/gen-manifest.js` | The manifest `commands` block ← `DOMAIN.commands`. | Build/verify commands are per-domain. |
+| `README.md` | One brief blockquote: experimental white-label direction + link to `docs/whitelabel/VISION.md`. | The project's front-page note must live in the README. |
+
 For the default `godot` domain every value above equals the old literal, so behavior is
-byte-for-byte unchanged (the onboarding gate proves it).
+byte-for-byte unchanged (the onboarding gate proves it). The `config.js` and `new.js` rows have
+since grown: `config.js` also resolves `DOMAIN` from the **project lock** (`.xenodot-project.json`,
+authoritative, mismatch-refused) and sources `FRAMEWORK_PLUGIN_DIR` + `ORCHESTRATOR_PROMPT` from
+it; `new.js` is now the deterministic `--domain` install (writes the lock, wires non-greenfield).
 
-### Deferred seams (still Godot-specific in the spine; route them in Phase 3)
+### Deferred seams (still Godot-flavored; degrade harmlessly, route later)
 
-Add to the table above when the first non-Godot domain needs them:
-
-- `ui/server/cli/gen-manifest.js` — the `commands` block (Godot CLI) + `project.godot` INI parsing.
-- `ui/orchestrator.md` (via `config.js` `ORCHESTRATOR_PROMPT`) — names the Godot agents.
-- `ui/server/core/session.js` — loads the single `plugin/`; a domain will likely load a
-  shared core **plus** its own pack (a multi-plugin decision, not a path swap).
+- `ui/server/core/session.js` — loads the single `plugin/` (already domain-routed via
+  `config.js` `FRAMEWORK_PLUGIN_DIR`); a domain may later load a shared core **plus** its own
+  pack (a multi-plugin decision, not a path swap).
+- `ui/server/core/engine-bin.js` / `$GODOT` — engine-binary probing is Godot-specific; a
+  non-godot project still gets `$GODOT` set (harmless, unused). Make it domain-aware.
+- `gen-manifest.js` render block + `project.godot` INI parsing — Godot-specific; yields empty
+  facts for other domains (fine for now).
 - Inventory field **labels** (`scenes` / `scripts`) in `project-state.js` + the client.
+- Per-project **library** isolation — `materialize` symlinks the shared plugin library; full
+  per-project independence (two app projects → separate learned libraries) is a later increment.
 
 ## Rebrand rename map (applied by `scripts/rebrand.mjs`, case-preserving)
 

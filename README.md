@@ -8,6 +8,12 @@
 
 An experiment in building games on **Godot and its compatible forks (Redot, Blazium)** with Claude Code using **a deliberate pipeline instead of a chat box**.
 
+> **This fork is an experiment.** We're white-labeling this framework so its pipeline can target
+> _any_ domain — installed per-project and locked deterministically (`install --domain <name>`),
+> not just games. It's early and we're still experimenting. The goal is to _use_ runtimes like
+> OpenClaw and Hermes (via the shared agentskills.io standard), not compete with them. Direction:
+> [docs/whitelabel/VISION.md](docs/whitelabel/VISION.md). Everything below is upstream's.
+
 ## The real goal
 
 Most frameworks hand you a fixed toolbox. This one is designed to be **broken, rebuilt, and replaced by you**.
@@ -346,7 +352,6 @@ If you want broad coverage now, go use GodotPrompter. If you want to experiment 
 <img width="1722" height="882" alt="image" src="https://github.com/user-attachments/assets/0b6b3223-ac6e-48c1-99c6-208f7e311370" />
 
 <img width="1612" height="1084" alt="image" src="https://github.com/user-attachments/assets/bd2e67f8-04e3-4b43-85f1-da199208073a" />
-
 
 ### Functional Questions - Approval Gate
 
