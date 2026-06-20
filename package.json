@@ -18,6 +18,7 @@
     "start": "node ui/server/core/index.js",
     "badges": "node ui/server/cli/update-badges.js",
     "release": "node ui/server/cli/release-stage.js",
+    "rebrand": "node scripts/rebrand.mjs",
     "check": "tsc --noEmit",
     "check:structure": "node ui/structure.check.js",
     "test": "node ui/reducer.check.js",
