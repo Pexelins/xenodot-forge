@@ -52,6 +52,7 @@ import {
   hasSkillSetup,
 } from "../features/skills/skills.js";
 import { listAgentSkills, applyAssignment } from "../features/skills/agent-skills.js";
+import { readSkills } from "../features/skills/skill-registry.js";
 
 /** Read a request body and write it as a transcript; respond with the path or an error.
  * @param {import("node:http").IncomingMessage} req @param {import("node:http").ServerResponse} res */
@@ -343,6 +344,25 @@ function handleAgentSkillsPost(req, res) {
   });
 }
 
+/** Skill-config lists for the settings panel + wizard. Each skill name appears ONCE, in the right
+ * bucket: FRAMEWORK skills (plugin/skills/*, e.g. caveman) are always-on and dropped from the
+ * toggleable lists entirely; WORKSPACE (~/.claude/commands) is discovered live; BUILTINS are the
+ * known Claude Code list minus anything already covered by framework or workspace — so a skill that
+ * exists in several places (caveman: framework + workspace + the built-in list) no longer triple-lists. */
+function skillsConfig() {
+  const framework = new Set(readSkills().keys());
+  const workspace = getWorkspaceSkills().filter((s) => !framework.has(s.name));
+  const wsNames = new Set(workspace.map((s) => s.name));
+  const builtins = BUILTIN_SKILLS.filter((n) => !framework.has(n) && !wsNames.has(n));
+  return {
+    workspace,
+    builtins,
+    overrides: getSkillOverrides(),
+    setupDone: hasSkillSetup(),
+    contexts: SKILL_CONTEXTS,
+  };
+}
+
 /** Simple GET endpoints: url → data producer. Keeps the main handler under the
  * complexity cap by replacing N if-branches with a single lookup.
  * @type {Record<string, () => unknown>} */
@@ -352,13 +372,7 @@ const GET_ROUTES = {
   "/api/tasks": readTasks,
   "/api/levels": listLevels,
   "/api/usage": computeUsage,
-  "/api/skills": () => ({
-    workspace: getWorkspaceSkills(),
-    builtins: BUILTIN_SKILLS,
-    overrides: getSkillOverrides(),
-    setupDone: hasSkillSetup(),
-    contexts: SKILL_CONTEXTS,
-  }),
+  "/api/skills": skillsConfig,
   "/api/agent-skills": listAgentSkills,
 };
 
