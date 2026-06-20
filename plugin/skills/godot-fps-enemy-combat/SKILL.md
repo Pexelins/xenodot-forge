@@ -1,5 +1,6 @@
 ---
 name: godot-fps-enemy-combat
+agents: [godot-combat]
 description: The hit / death / kill-confirm contract for a SHOOTABLE enemy in a first-person / shooter (FPS) game in Godot 4.6 — projectile or hitscan damage, NOT melee/RTS/other-genre enemy combat. Enemy health + score_value, a `died(enemy)` signal, a duck-typed `on_hit()` shootability seam (non-fatal hit flash vs fatal death flash + reparent-before-free death SFX), and the weapon-side `hit_confirmed` (every hit) / `kill_confirmed` (fatal hit) feedback seam that connects to the enemy's `died` idempotently. Use when an enemy must take damage and die from being shot, when "enemy health", "kill confirm", "hitmarker", "on_hit", "enemy died", "score on kill", or "multi-hit enemy" appears in a task, when a bullet must register a kill, or when a second bullet on a surviving enemy throws "Signal already connected" / the bullet hangs in the air. NOT the firing/despawn side (that is godot-travelling-projectile-3d) and NOT enemy patrol/chase behaviour (that is godot-enemy-ai) — this is the damage CONTRACT that links projectile, enemy, and weapon.
 ---
 

@@ -14,6 +14,7 @@ import { makeAskTool } from "../mcp-tools/ask-tool.js";
 import { makePromoteTool } from "../mcp-tools/promote-tool.js";
 import { makeHermesTool, makeHermesFeedbackTool } from "../mcp-tools/hermes-tool.js";
 import { makeAutonomousTool } from "../mcp-tools/autonomous-tool.js";
+import { makeSetSkillTool } from "../mcp-tools/set-skill-tool.js";
 import { uiControlAllow } from "./ui-control.js";
 import { emitContextUsage } from "./stream.js";
 import { readPromotions, decide, markPromoted } from "../features/promotions/promotions-store.js";
@@ -32,6 +33,7 @@ import {
   closeStragglerTasks,
   findOpenQuestion,
 } from "../features/tasks/tasks-store.js";
+import { resolveSessionSkills } from "../features/skills/skills.js";
 import {
   DEFAULT_POLICY,
   EDIT_TOOLS,
@@ -407,34 +409,29 @@ function runSession({
       } else {
         send({ type: "status", text: `session starting in ${PROJECT_DIR}` });
       }
+      // The OPTIONAL Codex reviewer is a SECOND local plugin (OpenAI's `codex-plugin-cc`, vendored
+      // on disk), appended ONLY when the user enabled it AND it's actually been cloned — a
+      // disabled/absent Codex changes nothing. Gating is array inclusion (the SDK has no per-plugin
+      // enable flag, and `plugins` only accepts `{ type: "local" }`). Extracted to a typed const so
+      // the options object below stays readable.
+      /** @type {import("@anthropic-ai/claude-agent-sdk").SdkPluginConfig[]} */
+      const codexPlugin =
+        getCodexConfig().enabled && existsSync(CODEX_PLUGIN_DIR)
+          ? [{ type: "local", path: CODEX_PLUGIN_DIR, skipMcpDiscovery: true }]
+          : [];
       const q = query({
         prompt: inbox.iterable,
         options: {
           ...(resumeId ? { resume: resumeId } : {}),
           cwd: PROJECT_DIR,
-          // The framework's agents/skills/hooks come from the plugin (single source
-          // of truth), not from copies in the game — so the game folder stays pure.
-          // Plugins load regardless of cwd. noMcp: the UI owns its MCP tools (below),
-          // so don't wire the plugin's own MCP. Capabilities namespace as `xenodot:`.
-          // The xenodot spine is always loaded. The OPTIONAL Codex reviewer is a SECOND local
-          // plugin (OpenAI's `codex-plugin-cc`, vendored on disk) appended ONLY when the user
-          // enabled it AND it's actually been cloned — so a disabled/absent Codex changes
-          // nothing. Gating is array inclusion: the SDK has no per-plugin enable flag, and
-          // `plugins` only accepts `{ type: "local" }`, which is why we vendor it. Its slash
-          // commands (`/codex:review`) expand from the user's prompt text (typed in the UI),
-          // and its `codex:codex-rescue` subagent becomes delegable. skipMcpDiscovery: the UI
-          // owns MCP. We do NOT enable its opt-in review-gate Stop hook (on-demand only).
+          // The framework's agents/skills/hooks come from the plugin (single source of truth), not
+          // from copies in the game — so the game folder stays pure. Plugins load regardless of cwd.
+          // The xenodot spine is always loaded; the Codex reviewer (codexPlugin) is appended only
+          // when enabled. skipMcpDiscovery: the UI owns its MCP tools (below). Its slash commands
+          // (`/codex:review`) expand from the user's prompt; `codex:codex-rescue` becomes delegable.
           plugins: [
             { type: "local", path: FRAMEWORK_PLUGIN_DIR, skipMcpDiscovery: true },
-            ...(getCodexConfig().enabled && existsSync(CODEX_PLUGIN_DIR)
-              ? [
-                  /** @type {import("@anthropic-ai/claude-agent-sdk").SdkPluginConfig} */ ({
-                    type: "local",
-                    path: CODEX_PLUGIN_DIR,
-                    skipMcpDiscovery: true,
-                  }),
-                ]
-              : []),
+            ...codexPlugin,
           ],
           // The framework knowledge base (plugin/library) and skill/agent sources live
           // in the plugin, OUTSIDE the game cwd. Mount the plugin as an extra working
@@ -455,9 +452,15 @@ function runSession({
           allowedTools: AUTO_ALLOW_TOOLS,
           model: MODEL,
           // Orchestrator routes more than it reasons; sub-agents override via their
-          // own `effort:` frontmatter while active. Skill discovery stays default
-          // ("all") so sub-agents can still invoke + preload the project's skills.
+          // own `effort:` frontmatter while active.
           effort: EFFORT,
+          // Skill index = a tight allowlist (resolveSessionSkills): the framework meta floor
+          // (caveman, quick) + the built-ins the user enabled via the skill wizard
+          // (skillOverrides). DOMAIN skills are excluded — both the framework `godot-*` skills
+          // and the game's own `.claude/skills` — because the orchestrator only routes; those
+          // belong to the implementer agents. A context filter, not a sandbox: unlisted skills
+          // stay on disk and remain loadable by the agents that list them.
+          skills: resolveSessionSkills(),
           // Keep Claude Code's tooling behavior, append the orchestrator role.
           // Hermes and Codex blocks are injected only when those integrations are active,
           // so the orchestrator's routing instructions match the actual team each session.
@@ -486,6 +489,7 @@ function runSession({
                 makeHermesTool(send, inbox.push),
                 makeHermesFeedbackTool(send),
                 makeAutonomousTool(send, checkLoop.disarm),
+                makeSetSkillTool(),
               ],
             }),
           },

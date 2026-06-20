@@ -1,5 +1,6 @@
 ---
 name: godot-project-conventions
+agents: [godot-dev]
 description: Establish or verify a Godot 4.x 3D pixel-art project's baseline — renderer, window/stretch, folder layout, naming, input map — and record it in CLAUDE.md as the single source of truth. Use FIRST in any new project, on "set up the project" / "start a POC" / "initialize the game", or whenever another godot-* skill is about to run and CLAUDE.md has no "## Project conventions" section yet.
 ---
 

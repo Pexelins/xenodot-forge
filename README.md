@@ -2,8 +2,8 @@
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 ![Godot-family 4.x](https://img.shields.io/badge/Godot--family-4.x-blue.svg)
-![Skills: 25](https://img.shields.io/badge/Skills-25-purple.svg)
-![Agents: 11](https://img.shields.io/badge/Agents-11-orange.svg)
+![Skills: 28](https://img.shields.io/badge/Skills-28-purple.svg)
+![Agents: 16](https://img.shields.io/badge/Agents-16-orange.svg)
 ![Status: POC](https://img.shields.io/badge/Status-POC-yellow.svg)
 
 An experiment in building games on **Godot and its compatible forks (Redot, Blazium)** with Claude Code using **a deliberate pipeline instead of a chat box**.
@@ -346,7 +346,6 @@ If you want broad coverage now, go use GodotPrompter. If you want to experiment 
 <img width="1722" height="882" alt="image" src="https://github.com/user-attachments/assets/0b6b3223-ac6e-48c1-99c6-208f7e311370" />
 
 <img width="1612" height="1084" alt="image" src="https://github.com/user-attachments/assets/bd2e67f8-04e3-4b43-85f1-da199208073a" />
-
 
 ### Functional Questions - Approval Gate
 

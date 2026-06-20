@@ -1,5 +1,6 @@
 ---
 name: godot-foliage
+agents: [godot-visuals]
 description: Build animated billboard foliage (grass, vegetation) for a 3D pixel-art Godot 4.x project — dense MultiMeshInstance3D blades that face the orthographic camera, optional noise-driven wind sway, and an optional low-framerate "handdrawn" TIME-quantized look. Use when adding grass/foliage, when blades render flat or edge-on under an orthographic camera, when grass casts unwanted ground shadows, when all blades sway or snap in unison, or when choosing alpha-scissor vs alpha-blend for foliage.
 ---
 

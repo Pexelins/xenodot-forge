@@ -3,7 +3,7 @@
 // (resume). Pure disk module: no per-connection state, re-read/written on each
 // mutation. The MCP `tasks` tool (task-tool.js) and the user's `task_update`
 // messages (session.js) both funnel through applyOp.
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import path from "node:path";
 import { parseJSON } from "../../../lib/json.js";
 import { PROJECT_DIR } from "../../core/config.js";
@@ -17,6 +17,15 @@ const STATUSES = new Set(["pending", "in_progress", "done"]);
 const tasksDir = () => path.join(PROJECT_DIR, ".xenodot");
 /** @returns {string} */
 const tasksPath = () => path.join(tasksDir(), "tasks.json");
+
+/** Wipe `.xenodot/handoffs/` — the transient builder→orchestrator report files. Called
+ * once at server boot: by the time we restart, every prior-session handoff has been
+ * consumed (summarized + relayed), so a blanket delete is safe and deterministic with no
+ * manifest. The dir is recreated lazily on the next builder's Write. `force` no-ops when
+ * the dir is absent. */
+export function reapHandoffs() {
+  rmSync(path.join(tasksDir(), "handoffs"), { recursive: true, force: true });
+}
 
 /** Read the persisted list; an absent or corrupt file is an empty list.
  * @returns {Task[]} */

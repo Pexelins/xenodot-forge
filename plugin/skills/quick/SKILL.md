@@ -1,5 +1,6 @@
 ---
 name: quick
+agents: [orchestrator]
 description: Quick-action entry point for the DiceOfFate framework — routes a small game request either straight to godot-dev or back to the pipeline, with one consistent report shape. Use when the user invokes /quick <task>, or asks for a small concrete game change and it's unclear whether it needs the game-designer first.
 ---
 

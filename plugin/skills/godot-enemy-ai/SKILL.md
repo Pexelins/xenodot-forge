@@ -1,5 +1,6 @@
 ---
 name: godot-enemy-ai
+agents: [godot-combat]
 description: Build a patrolling/chasing enemy in Godot 4.6 from NATIVE nodes only — a baked NavigationRegion3D + NavigationAgent3D for 3D pathfinding/avoidance, a node-based StateMachine component (patrol → chase → attack) composed onto a CharacterBody3D, and a detection-radius + line-of-sight perception seam that flips patrol→chase. Use when adding an enemy/NPC/monster/guard that walks a route and reacts to the player, when an agent must path around walls to a moving target, when an enemy needs distinct behaviour states, when "patrol", "chase", "aggro", "detection range", or "line of sight" appears in a task, or when an enemy stands still / can't find a path / never aggroes. NO third-party AI addon, NO behaviour trees, NO Resource-FSM — node-FSM + native navigation server only.
 ---
 

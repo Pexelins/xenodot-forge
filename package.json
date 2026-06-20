@@ -20,12 +20,13 @@
     "release": "node ui/server/cli/release-stage.js",
     "check": "tsc --noEmit",
     "check:structure": "node ui/structure.check.js",
-    "test": "node ui/reducer.check.js",
+    "check:skills": "node ui/server/cli/gen-skill-scope.js",
+    "test": "node ui/reducer.check.js && node ui/server/features/skills/skills.check.js",
     "test:onboarding": "node ui/server/cli/onboarding.check.js",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix --max-warnings 0",
     "format": "prettier --write .",
-    "validate": "npm run check && npm run lint && npm run check:structure",
+    "validate": "npm run check && npm run lint && npm run check:structure && npm run check:skills",
     "prepare": "husky || true"
   },
   "dependencies": {

@@ -33,12 +33,23 @@ import { writeTranscript } from "../features/transcripts/transcript-write.js";
 import { writeAsset, writeAssetFromPath } from "../features/assets/asset-write.js";
 import { writeLevel } from "../features/levels/level-write.js";
 import { listLevels } from "../features/levels/level-read.js";
-import { readTasks } from "../features/tasks/tasks-store.js";
+import { readTasks, reapHandoffs } from "../features/tasks/tasks-store.js";
 import { serveStatic } from "./http/static.js";
 import { reclaimPortIfBusy } from "./http/port.js";
 import { handleConnection } from "./session.js";
 import { prepareGame } from "../cli/materialize.js";
 import { computeUsage } from "./http/usage.js";
+import {
+  getWorkspaceSkills,
+  BUILTIN_SKILLS,
+  SKILL_CONTEXTS,
+  getSkillOverrides,
+  saveSkillOverrides,
+  saveSkillSetup,
+  applySkillSetup,
+  hasSkillSetup,
+} from "../features/skills/skills.js";
+import { listAgentSkills, applyAssignment } from "../features/skills/agent-skills.js";
 
 /** Read a request body and write it as a transcript; respond with the path or an error.
  * @param {import("node:http").IncomingMessage} req @param {import("node:http").ServerResponse} res */
@@ -242,6 +253,88 @@ if (PROJECT_FOUND) {
   if (lib.linked && lib.reason === "created") console.log(`library: linked → plugin/library`);
   if (assets.linked && assets.reason === "created")
     console.log(`${RES_ASSET_MOUNT}: linked → external asset library`);
+  const skillSetup = applySkillSetup();
+  if (skillSetup.applied)
+    console.log("skills: applied skill-setup overrides from .xenodot/skill-setup.json");
+}
+
+/** Save the wizard result to .xenodot/skill-setup.json (applied to settings on next startup).
+ * @param {import("node:http").IncomingMessage} req @param {import("node:http").ServerResponse} res */
+function handleSkillSetupPost(req, res) {
+  /** @type {Buffer[]} */
+  const chunks = [];
+  req.on("data", (/** @type {Buffer} */ c) => {
+    chunks.push(c);
+  });
+  req.on("end", () => {
+    /** @type {{ ok: true } | { error: string }} */
+    let result;
+    try {
+      const body = /** @type {{ context?: string, overrides?: Record<string, string> }} */ (
+        parseJSON(Buffer.concat(chunks).toString("utf8"))
+      );
+      result = saveSkillSetup(body.context ?? "", body.overrides ?? {});
+    } catch {
+      result = { error: "bad request" };
+    }
+    res.writeHead("error" in result ? 400 : 200, { "content-type": "application/json" });
+    res.end(JSON.stringify(result));
+  });
+}
+
+/** Save skillOverrides sent by the settings panel into the game's .claude/settings.json.
+ * @param {import("node:http").IncomingMessage} req @param {import("node:http").ServerResponse} res */
+function handleSkillsPost(req, res) {
+  /** @type {Buffer[]} */
+  const chunks = [];
+  req.on("data", (/** @type {Buffer} */ c) => {
+    chunks.push(c);
+  });
+  req.on("end", () => {
+    /** @type {{ ok: true } | { error: string }} */
+    let result;
+    try {
+      const body = /** @type {{ overrides?: Record<string, string> }} */ (
+        parseJSON(Buffer.concat(chunks).toString("utf8"))
+      );
+      result = saveSkillOverrides(body.overrides ?? {});
+    } catch {
+      result = { error: "bad request" };
+    }
+    res.writeHead("error" in result ? 400 : 200, { "content-type": "application/json" });
+    res.end(JSON.stringify(result));
+  });
+}
+
+/** Apply a batch of agent-skill assignment changes from the recalibration panel — each edits the
+ * framework registry (skill tag + agent frontmatter), applied on the next session.
+ * @param {import("node:http").IncomingMessage} req @param {import("node:http").ServerResponse} res */
+function handleAgentSkillsPost(req, res) {
+  /** @type {Buffer[]} */
+  const chunks = [];
+  req.on("data", (/** @type {Buffer} */ c) => {
+    chunks.push(c);
+  });
+  req.on("end", () => {
+    /** @type {{ ok: true } | { error: string }} */
+    let result;
+    try {
+      const body = /** @type {{ changes?: { agent: string, skill: string, on: boolean }[] }} */ (
+        parseJSON(Buffer.concat(chunks).toString("utf8"))
+      );
+      /** @type {string[]} */
+      const errors = [];
+      for (const ch of body.changes ?? []) {
+        const r = applyAssignment(ch.agent, ch.skill, ch.on);
+        if ("error" in r) errors.push(`${ch.agent} / ${ch.skill}: ${r.error}`);
+      }
+      result = errors.length ? { error: errors.join("; ") } : { ok: true };
+    } catch {
+      result = { error: "bad request" };
+    }
+    res.writeHead("error" in result ? 400 : 200, { "content-type": "application/json" });
+    res.end(JSON.stringify(result));
+  });
 }
 
 /** Simple GET endpoints: url → data producer. Keeps the main handler under the
@@ -253,6 +346,14 @@ const GET_ROUTES = {
   "/api/tasks": readTasks,
   "/api/levels": listLevels,
   "/api/usage": computeUsage,
+  "/api/skills": () => ({
+    workspace: getWorkspaceSkills(),
+    builtins: BUILTIN_SKILLS,
+    overrides: getSkillOverrides(),
+    setupDone: hasSkillSetup(),
+    contexts: SKILL_CONTEXTS,
+  }),
+  "/api/agent-skills": listAgentSkills,
 };
 
 /** POST endpoints: url → handler. Keeps the request dispatcher under the complexity
@@ -263,6 +364,9 @@ const POST_ROUTES = {
   "/api/asset": handleAssetPost,
   "/api/level": handleLevelPost,
   "/api/settings": handleSettingsPost,
+  "/api/skills": handleSkillsPost,
+  "/api/setup/skills": handleSkillSetupPost,
+  "/api/agent-skills": handleAgentSkillsPost,
   "/api/hermes/check": handleHermesCheckPost,
   "/api/codex/check": handleCodexCheckPost,
 };
@@ -296,6 +400,9 @@ wss.on("connection", handleConnection);
 /** What runs once the server is actually listening. */
 function onListening() {
   console.log(`UI on http://localhost:${PORT} — project: ${PROJECT_DIR}`);
+  // Boot-time cleanup: clear last session's transient builder handoff files (all consumed
+  // by now). Deterministic, stateless — see reapHandoffs / the Handoffs orchestrator rule.
+  reapHandoffs();
   // Bring up the Hermes gateway too when Hermes is on (opt-in, skipped if already up).
   // Non-blocking and non-fatal: the UI is fully usable whether or not this succeeds.
   void maybeStartHermesGateway();

@@ -16,7 +16,7 @@ import { initComposer } from "../features/chat/composer.js";
 import { initTranscript } from "../features/sessions/transcript.js";
 import { initGetAssets } from "../features/assets/get-assets.js";
 import { initDrawLevel } from "../features/level-editor/draw-level.js";
-import { initSettings } from "../features/settings/settings.js";
+import { initSettings, maybeAutoOpenSkillSetup } from "../features/settings/settings.js";
 import { initAutonomous } from "../features/autonomous/autonomous.js";
 import { send } from "./websocket.js";
 import { $, $input } from "./dom.js";
@@ -40,6 +40,7 @@ initDrawLevel();
 initTranscript();
 initSettings();
 initAutonomous();
+void maybeAutoOpenSkillSetup();
 
 $input("mode-select").onchange = () => {
   send({ type: "policy", value: $input("mode-select").value });
