@@ -60,13 +60,13 @@ themselves — but you don't have to wait for them.
 
 ### When to use
 
-- After `xenodot:godot-dev` lands a significant feature or refactor and a second pair of eyes helps.
+- After `xenomoon:godot-dev` lands a significant feature or refactor and a second pair of eyes helps.
 - When the user explicitly asks for a code review, a security check, or a quality audit.
 - Before a game-local skill/agent is promoted to the framework — catch issues before they're permanent.
 
 ### Limits
 
 - Read-only and advisory: Codex never writes files, stages commits, or runs the build (a `task --write` can edit, but that's the rescue/fix path, not a review).
-- Findings surface as inline comments in the UI; you and `xenodot:godot-dev` decide what to act on.
+- Findings surface as inline comments in the UI; you and `xenomoon:godot-dev` decide what to act on.
 - Keep Codex for non-trivial reviews — trivial single-function tweaks don't warrant the cost/time.
 - If the `codex` CLI isn't installed/authed, the companion errors out (install: `npm i -g @openai/codex`, then `codex login`). That's an install/auth gate, not an interactive one.

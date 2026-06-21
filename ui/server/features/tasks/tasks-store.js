@@ -18,7 +18,7 @@ const tasksDir = () => path.join(PROJECT_DIR, ".xenomoon");
 /** @returns {string} */
 const tasksPath = () => path.join(tasksDir(), "tasks.json");
 
-/** Wipe `.xenodot/handoffs/` — the transient builder→orchestrator report files. Called
+/** Wipe `.xenomoon/handoffs/` — the transient builder→orchestrator report files. Called
  * once at server boot: by the time we restart, every prior-session handoff has been
  * consumed (summarized + relayed), so a blanket delete is safe and deterministic with no
  * manifest. The dir is recreated lazily on the next builder's Write. `force` no-ops when

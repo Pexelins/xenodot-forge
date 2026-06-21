@@ -256,10 +256,10 @@ if (PROJECT_FOUND) {
     console.log(`${RES_ASSET_MOUNT}: linked → external asset library`);
   const skillSetup = applySkillSetup();
   if (skillSetup.applied)
-    console.log("skills: applied skill-setup overrides from .xenodot/skill-setup.json");
+    console.log("skills: applied skill-setup overrides from .xenomoon/skill-setup.json");
 }
 
-/** Save the wizard result to .xenodot/skill-setup.json (applied to settings on next startup).
+/** Save the wizard result to .xenomoon/skill-setup.json (applied to settings on next startup).
  * @param {import("node:http").IncomingMessage} req @param {import("node:http").ServerResponse} res */
 function handleSkillSetupPost(req, res) {
   /** @type {Buffer[]} */

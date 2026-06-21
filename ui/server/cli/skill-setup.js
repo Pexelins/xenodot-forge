@@ -1,4 +1,4 @@
-// skill-setup — CLI fallback for skill allowlist configuration. If .xenodot/skill-setup.json
+// skill-setup — CLI fallback for skill allowlist configuration. If .xenomoon/skill-setup.json
 // already exists (written by the UI wizard), applies it immediately and exits. Otherwise,
 // runs interactive prompts, writes skill-setup.json, and applies overrides directly.
 //
@@ -19,7 +19,7 @@ const target = path.resolve(
 );
 
 const SETTINGS_FILE = path.join(target, ".claude", "settings.json");
-const SETUP_FILE = path.join(target, ".xenodot", "skill-setup.json");
+const SETUP_FILE = path.join(target, ".xenomoon", "skill-setup.json");
 
 // If the UI wizard already wrote a skill-setup.json, apply it and exit.
 if (existsSync(SETUP_FILE)) {
@@ -41,7 +41,7 @@ if (existsSync(SETUP_FILE)) {
       JSON.stringify({ ...saved, skillOverrides: data.overrides }, null, 2) + "\n",
     );
     console.log(
-      `skills: applied ${Object.keys(data.overrides).length} override(s) from .xenodot/skill-setup.json`,
+      `skills: applied ${Object.keys(data.overrides).length} override(s) from .xenomoon/skill-setup.json`,
     );
   }
   process.exit(0);
@@ -57,7 +57,7 @@ function ask(rl, question) {
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 
 console.log(`\nSkill setup for: ${target}`);
-console.log("Framework (xenodot) skills are always on — not listed here.");
+console.log("Framework (xenomoon) skills are always on — not listed here.");
 console.log("Answer y/n for each skill. Enter = keep default (n = off).\n");
 
 const workspaceSkills = getWorkspaceSkills();

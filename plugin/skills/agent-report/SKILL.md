@@ -12,7 +12,7 @@ A long background worker's relayed `result` gets clipped (the tail is lost) — 
 
 ## Producer — you built something, now hand off
 
-Your **last action** is to **Write your full report** to the handoff path the orchestrator gave you (e.g. `.xenodot/handoffs/<slug>.md`). If no path was given, use `.xenodot/handoffs/<task-slug>.md` (kebab from the task) and name it in your result. Write it **last** so it reflects final state — if you die before writing, the summarizer reports the absence (graceful, not silent-wrong).
+Your **last action** is to **Write your full report** to the handoff path the orchestrator gave you (e.g. `.xenomoon/handoffs/<slug>.md`). If no path was given, use `.xenomoon/handoffs/<task-slug>.md` (kebab from the task) and name it in your result. Write it **last** so it reflects final state — if you die before writing, the summarizer reports the absence (graceful, not silent-wrong).
 
 Report fields — **`gate` FIRST** (the tail can clip; lead with the load-bearing fact):
 

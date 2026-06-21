@@ -1,7 +1,7 @@
 // Skill allowlist management — reads workspace skills from ~/.claude/commands/,
 // exposes the known built-in Claude Code skill list, and reads/writes the
 // skillOverrides block in the game project's .claude/settings.json.
-// The setup wizard writes .xenodot/skill-setup.json; the server applies it on next start.
+// The setup wizard writes .xenomoon/skill-setup.json; the server applies it on next start.
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { PROJECT_DIR } from "../../core/config.js";
@@ -26,15 +26,15 @@ export const SKILL_CONTEXTS = {
 
 const GAME_SETTINGS = path.join(PROJECT_DIR, ".claude", "settings.json");
 
-/** Path to the skill setup record written by the UI wizard. Lives in .xenodot/ (gitignored). */
-export const SETUP_FILE = path.join(PROJECT_DIR, ".xenodot", "skill-setup.json");
+/** Path to the skill setup record written by the UI wizard. Lives in .xenomoon/ (gitignored). */
+export const SETUP_FILE = path.join(PROJECT_DIR, ".xenomoon", "skill-setup.json");
 
 /** Whether the skill setup wizard has been completed for this game project. */
 export function hasSkillSetup() {
   return existsSync(SETUP_FILE);
 }
 
-/** Write the wizard result to .xenodot/skill-setup.json. Does NOT apply to settings yet —
+/** Write the wizard result to .xenomoon/skill-setup.json. Does NOT apply to settings yet —
  * that happens on the next server start via applySkillSetup().
  * @param {string} context @param {Record<string, string>} overrides
  * @returns {{ ok: true } | { error: string }} */
@@ -47,7 +47,7 @@ export function saveSkillSetup(context, overrides) {
   }
 }
 
-/** Read .xenodot/skill-setup.json and apply its overrides to game/.claude/settings.json.
+/** Read .xenomoon/skill-setup.json and apply its overrides to game/.claude/settings.json.
  * Called at server startup. No-op if the file doesn't exist.
  * @returns {{ applied: boolean }} */
 export function applySkillSetup() {
@@ -107,7 +107,7 @@ export function saveSkillOverrides(overrides) {
  * own `.claude/skills` (e.g. godot-art-style, godot-decal-vfx). The orchestrator only ROUTES; domain
  * skills belong to the implementer agents, not the hive. (Blanket-including game-local skills here
  * polluted the hive's index — its `godot-oneshot-vfx` bare name even pulled in the framework copy as
- * `xenodot:godot-oneshot-vfx`.) This is also what finally makes `skillOverrides` do something.
+ * `xenomoon:godot-oneshot-vfx`.) This is also what finally makes `skillOverrides` do something.
  *
  * Override semantics (skillOverrides: Record<name, "on"|"off">), applied to built-ins/workspace only:
  *   per-name "on"/"off" wins; else the "*" wildcard; else DEFAULT-DENY. An unconfigured project

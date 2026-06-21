@@ -1,12 +1,12 @@
 ---
 name: autonomous-main-goal
 agents: [orchestrator]
-description: The hive's Autonomous Mode self-drive loop. When a standing Main Goal is active, evaluate it, break it into ordered slices, then on each `[Autonomous check #N]` cycle assess progress, dispatch the next slice, and record one-line status via mcp__ui__autonomous — until the board satisfies the goal. HIVE-ONLY. Load when a Main Goal is set (header / .xenodot/autonomous.json) and an autonomous check tick arrives, or when judging whether the goal is met.
+description: The hive's Autonomous Mode self-drive loop. When a standing Main Goal is active, evaluate it, break it into ordered slices, then on each `[Autonomous check #N]` cycle assess progress, dispatch the next slice, and record one-line status via mcp__ui__autonomous — until the board satisfies the goal. HIVE-ONLY. Load when a Main Goal is set (header / .xenomoon/autonomous.json) and an autonomous check tick arrives, or when judging whether the goal is met.
 ---
 
 # Autonomous Main Goal — the hive's self-drive loop
 
-A **Main Goal** is a standing objective the user sets (header modal → `.xenodot/autonomous.json`). While it is active a server timer pushes an `[Autonomous check #N]` turn into this session each cycle. You (the hive) drive the goal toward done WITHOUT waiting for the user, reporting via the `mcp__ui__autonomous` tool. The loop's plumbing lives in `session.js`; this skill is how you handle each tick.
+A **Main Goal** is a standing objective the user sets (header modal → `.xenomoon/autonomous.json`). While it is active a server timer pushes an `[Autonomous check #N]` turn into this session each cycle. You (the hive) drive the goal toward done WITHOUT waiting for the user, reporting via the `mcp__ui__autonomous` tool. The loop's plumbing lives in `session.js`; this skill is how you handle each tick.
 
 ## Kickoff (first cycle, when the goal is set)
 
