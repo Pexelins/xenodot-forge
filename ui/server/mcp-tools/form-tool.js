@@ -48,7 +48,21 @@ export function makeFormTool(waitFor, formAgentQueue) {
     async (input) => {
       // canUseTool pushed this call's agent just before the handler ran (FIFO).
       const agent = formAgentQueue.shift() ?? "main";
-      const reply = await waitFor("form", { input, agent });
+      // Deterministic escape hatch: EVERY form carries a trailing free-text
+      // feedback field so the user can always enter input that fits no option.
+      // Enforced here at the tool level — not left to each agent to remember.
+      const FEEDBACK_ID = "additional_feedback";
+      const fields = Array.isArray(input.fields) ? [...input.fields] : [];
+      if (!fields.some((f) => f?.id === FEEDBACK_ID)) {
+        fields.push({
+          id: FEEDBACK_ID,
+          label: "Anything else / corrections?",
+          type: "textarea",
+          placeholder: "Optional — feedback that doesn't fit the options above",
+          required: false,
+        });
+      }
+      const reply = await waitFor("form", { input: { ...input, fields }, agent });
       return {
         content: [
           {
