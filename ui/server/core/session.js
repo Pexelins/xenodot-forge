@@ -425,6 +425,12 @@ function runSession({
         prompt: inbox.iterable,
         options: {
           ...(resumeId ? { resume: resumeId } : {}),
+          // Every agent — orchestrator and all sub-agents, foreground or background — runs in this
+          // one working tree. No per-agent git-worktree isolation, BY DESIGN: faster and simpler.
+          // The trade-off: concurrent builders editing overlapping/adjacent files can race (one's
+          // half-applied edit fails the other's godot-verify, or clobbers its writes). We accept that
+          // residual and mitigate it in the orchestrator's dispatch rules (orchestrator.md →
+          // "Concurrent builders share one working tree"), not with isolation here.
           cwd: PROJECT_DIR,
           // The framework's agents/skills/hooks come from the plugin (single source of truth), not
           // from copies in the game — so the game folder stays pure. Plugins load regardless of cwd.
