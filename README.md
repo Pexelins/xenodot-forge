@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/xm-logo-brown.png" alt="XenoMoon" width="380" />
+</p>
+
 # Xenomoon
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)

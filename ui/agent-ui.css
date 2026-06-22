@@ -1,52 +1,47 @@
 /* ============================================================
-   Xenomoon Forge — UI styles
-   "The Forge Temple": the Xenomoon creature's bioluminescent
-   workshop. Void-ink maroon-black void, forge-green machine-spirit
-   glow, alien-lime hotspots. Sharp corners, stamped labels.
-   Official palette (assets/VoidInk_style.md):
-     Void Ink · Forge Green · Alien Lime · Pale Plasma ·
-     Bone White · Muted Alloy · Deep Panel.
+   XenoMoon — UI styles
+   "Lunar metal": warm silver / antique-beige instruments over a
+   deep space-charcoal void. Moonlit panels, sharp corners, stamped
+   labels; a faded alien-green accent used sparingly.
+   Palette: Deep Space Charcoal · Soft Black Navy · Warm Lunar
+     Silver · Antique Moon Beige · Pale Silver · Soft Steel Gray ·
+     Muted Taupe · Dark Graphite · (accent) Faded Alien Green.
    Bricolage Grotesque (display) · Archivo (UI) · IBM Plex Mono.
    ============================================================ */
 
 :root {
-  /* Machine-spirit glow — Forge Green core, Alien Lime for readable
-     text, Pale Plasma for the hottest tips. The brand's vivid
-     yellow-green bioluminescence. */
-  --accent: oklch(0.72 0.2 130); /* Forge Green  #65C82D */
-  --accent-text: oklch(0.86 0.19 120); /* Alien Lime   #A9F35A */
-  --accent-bright: oklch(0.94 0.08 115); /* Pale Plasma  #E2FFC2 */
+  /* XenoMoon — warm lunar silver / antique moon beige over deep space charcoal.
+     A premium "moon metal" feel; the alien identity survives only as a faint
+     green accent, used sparingly. */
+  --accent: #c9bba8; /* Warm Lunar Silver — primary brand / interactive */
+  --accent-text: #d9cdbb; /* lifted silver — accent used as text/links */
+  --accent-bright: #efe8da; /* warm near-white — hottest emphasis */
   --accent-dim: color-mix(in oklab, var(--accent) 14%, transparent);
   --accent-border: color-mix(in oklab, var(--accent) 40%, transparent);
 
-  /* Void Ink base + Deep Panel green-steel — the creature's habitat:
-     a maroon-black void (reads near-black) under forge-green plates. */
-  --bg: oklch(
-    0.115 0.03 30
-  ); /* Void Ink #120000, eased toward true black so
-                                 the green identity stays the protagonist */
-  --panel: oklch(0.185 0.026 132); /* Deep Panel   #202B20, sunk for depth */
+  /* Deep Space Charcoal void under Soft Black Navy panels — the lunar night. */
+  --bg: #080c0f; /* Deep Space Charcoal */
+  --panel: #0b1117; /* Soft Black Navy — sunk for depth */
   --panel-2: color-mix(in oklab, var(--panel), white 6%);
   --panel-3: color-mix(in oklab, var(--panel), white 12%);
-  --well: oklch(0.14 0.02 132);
-  --border: oklch(0.86 0.07 120 / 0.1); /* faint Alien-Lime hairline */
-  --border-strong: oklch(0.86 0.07 120 / 0.18);
+  --well: #05080b; /* inset well, sunk below bg */
+  --border: color-mix(in oklab, #8e9494 16%, transparent); /* faint steel hairline */
+  --border-strong: color-mix(in oklab, #8e9494 30%, transparent);
 
-  --text: oklch(0.97 0.015 105); /* Bone White   #F6F8EF */
-  --text-2: oklch(0.8 0.022 116);
-  /* Tertiary clears WCAG AA (~4.6:1 on --panel) — weathered alloy that
-     still reads cleanly without straining the eye. */
-  --text-3: oklch(0.65 0.03 122);
+  --text: #e6e1d8; /* Pale Silver — primary */
+  --text-2: #b7b2a8; /* dimmed silver — secondary */
+  /* Tertiary clears WCAG AA on --panel — soft steel that reads cleanly. */
+  --text-3: #8e9494; /* Soft Steel Gray */
   /* Decoration only — glyphs/markers/rules that are seen, never read. */
-  --text-4: oklch(0.53 0.033 124); /* Muted Alloy  #6F806B */
+  --text-4: #6f665c; /* Muted Taupe Gray */
 
-  /* Forge semantics: verdigris = quenched, brass = caution,
-     hot iron = danger, steel = inspection, copper = casting */
-  --green: oklch(0.78 0.11 172);
-  --amber: oklch(0.78 0.12 85);
-  --red: oklch(0.64 0.21 25);
-  --blue: oklch(0.74 0.08 235);
-  --purple: oklch(0.74 0.1 350);
+  /* Muted lunar semantics: faded alien green = the one xeno nod (success),
+     antique brass = caution, weathered iron = danger, steel = info, mauve = tag. */
+  --green: #9bbe4b; /* Faded Alien Green */
+  --amber: #c9a85e;
+  --red: #c16a52;
+  --blue: #7fa0b5;
+  --purple: #a38fa0;
 
   --radius: 3px;
   --radius-sm: 2px;
@@ -1188,7 +1183,7 @@ body.resizing iframe {
 }
 
 /* Primary surfaces — Promote · Design. Stamped display labels under a
-   forge-green quench line when active. */
+   warm-silver accent line when active. */
 .wb-tabs-primary {
   display: flex;
   gap: 2px;
