@@ -1,0 +1,24 @@
+{
+  "name": "webapp",
+  "label": "Web App",
+  "description": "Empty starter package for React + Node.js web apps. Ships NO pre-baked capabilities — it learns the project. Experimental POC; not a committed product surface.",
+  "populated": false,
+  "engine": {
+    "name": "node",
+    "projectFile": "package.json",
+    "needsBinary": false
+  },
+  "inventory": {
+    "scenes": [],
+    "scripts": [".js", ".ts", ".jsx", ".tsx"],
+    "ignore": ["node_modules", "dist", "build", "out", "coverage", ".next"]
+  },
+  "materializeIntoProject": false,
+  "plugin": "domains/webapp/plugin",
+  "orchestrator": "domains/webapp/orchestrator.md",
+  "commands": {
+    "build": "npm run build --if-present",
+    "lint": "npm run lint --if-present",
+    "test": "npm test --if-present"
+  }
+}

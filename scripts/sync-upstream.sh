@@ -1,38 +1,31 @@
 #!/usr/bin/env bash
-# sync-upstream.sh — pull upstream into our fork the disciplined way.
-# See docs/whitelabel/SYNC.md for the full rationale.
+# sync-upstream.sh — pull upstream improvements INTO our fork. One-way: we only
+# ever FETCH from the source and NEVER push back to it (a pre-push hook enforces
+# this). See docs/whitelabel/SYNC.md for the full rationale.
 #
-#   main  = pristine mirror of upstream/main (never hand-edited)
-#   forge = our integration trunk; upstream is MERGED in (NOT rebased), and the
-#           xenomoon rebrand is COMMITTED on forge — so a sync = merge + re-run the codemod.
+#   main = OUR xenomoon trunk — branded end-to-end, rebrand COMMITTED. Upstream is
+#          MERGED in (NOT rebased), then the xenomoon rebrand is re-run + committed.
+#   We keep no local upstream-mirror branch; upstream/main is read directly.
 #
 # Flags:
-#   --push     also push the fast-forwarded main to origin
 #   --no-test  skip `npm run test:onboarding` (faster, less safe)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-PUSH=0
 RUN_TEST=1
 for arg in "$@"; do
   case "$arg" in
-    --push) PUSH=1 ;;
     --no-test) RUN_TEST=0 ;;
     *) echo "unknown flag: $arg" >&2; exit 2 ;;
   esac
 done
 
-echo "==> fetching upstream"
+echo "==> fetching upstream (read-only source; we never push to it)"
 git fetch upstream
 
-echo "==> fast-forwarding main to upstream/main"
+echo "==> merging upstream/main into our trunk 'main' (rebrand is committed; expect conflicts on rebranded lines)"
 git checkout main
-git merge --ff-only upstream/main
-[ "$PUSH" = 1 ] && { echo "==> pushing main to origin"; git push origin main; }
-
-echo "==> merging main into forge (rebrand is committed on forge; expect conflicts on rebranded lines)"
-git checkout forge
-if ! git merge --no-ff main; then
+if ! git merge --no-ff upstream/main; then
   echo
   echo "Merge conflicts — resolve them, then finish the sync by hand:"
   echo "  - keep README ours; keep the DOMAIN seam in ui/server/core/config.js"
@@ -50,6 +43,7 @@ if [ "$RUN_TEST" = 1 ]; then
 fi
 
 echo
-echo "Done. main merged into forge cleanly. Re-brand the merged-in upstream strings:"
+echo "Done. upstream/main merged into our 'main' trunk. Re-brand the merged-in upstream strings:"
 echo "    node scripts/rebrand.mjs && git commit -am 'rebrand: re-flip merged upstream'"
 echo "    node scripts/rebrand.mjs --check   # only arthur0n + docs/whitelabel + scripts keep 'xenodot'"
+echo "Publish to our repo:  git push xenomoon main"

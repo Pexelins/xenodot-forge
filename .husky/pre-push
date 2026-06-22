@@ -1,0 +1,25 @@
+# pre-push: HARD BLOCK any push to the forked upstream (arthur0n/xenodot-forge).
+# This repo is a FORK. The relationship is one-way: we only ever FETCH from the
+# source — we NEVER push back to it. Our work is published to OUR repos:
+# xenomoon (arthur0n/xenomoon) and the origin fork (Pexelins/xenodot-forge).
+# See docs/whitelabel/SYNC.md.
+remote_name="$1"
+remote_url="$2"
+
+case "$remote_url" in
+  *arthur0n/xenodot-forge*)
+    echo "" >&2
+    echo "✖ pre-push BLOCKED — '$remote_url' is the upstream framework we forked." >&2
+    echo "  This fork is one-way: we FETCH from the source, we NEVER push to it." >&2
+    echo "  Publish to 'xenomoon' (arthur0n/xenomoon) or 'origin' (Pexelins/xenodot-forge) instead." >&2
+    echo "" >&2
+    exit 1
+    ;;
+esac
+
+if [ "$remote_name" = "upstream" ]; then
+  echo "✖ pre-push BLOCKED — remote 'upstream' is the forked source (read-only). Never push there." >&2
+  exit 1
+fi
+
+exit 0

@@ -1,0 +1,6 @@
+{
+  "name": "xenomoon-webapp",
+  "description": "Web app domain package (empty POC) for React + Node.js — capabilities are learned per project, none ship pre-baked.",
+  "version": "0.0.0",
+  "author": { "name": "Xenomoon Forge" }
+}

@@ -5,7 +5,7 @@ in NEW files/dirs upstream never touches.** This file is the audited list of the
 exceptions: upstream-owned files we edit, and the rename map the rebrand codemod
 applies.
 
-> **The trunk is rebranded (committed).** `forge` is xenomoon end-to-end, so the rebrand modifies
+> **The trunk is rebranded (committed).** Our `main` trunk is xenomoon end-to-end, so the rebrand modifies
 > _most_ upstream files — not just the behavioral seam edits in the table below. On an upstream
 > merge, expect conflicts on rebranded identifier lines too; resolve them and re-run
 > `scripts/rebrand.mjs` (see `SYNC.md`). The table below still tracks our **behavioral** seam edits
@@ -15,8 +15,8 @@ applies.
 
 - `docs/whitelabel/**` — this contract, the sync runbook.
 - `scripts/rebrand.mjs`, `scripts/sync-upstream.sh` — our build/sync machinery.
-- `domains/**` — the domain packs. `domains/godot/` (reference, mirrors today) ships now;
-  `domains/salesforce/` (POC) lands in Phase 3.
+- `domains/**` — the domain packs. `domains/godot/` (upstream reference) ships now; our own
+  packs `domains/app/` and `domains/webapp/` (Node / React, empty starters) live here too.
 - `ui/server/core/domain-resolver.js` — the single module the spine asks for
   domain-specific values. New file → no conflict.
 

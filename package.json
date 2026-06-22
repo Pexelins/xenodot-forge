@@ -1,7 +1,7 @@
 {
   "name": "xenomoon-forge",
   "version": "0.1.9",
-  "description": "Xenomoon Forge — POC web UI + agent workflow (design -> implement -> verify) for building Godot-family (Godot / Redot / Blazium) games with Claude Code",
+  "description": "Xenomoon Forge — POC web UI + agent workflow (design -> implement -> verify) you install per project and lock to a domain (Godot reference; Node/web) with Claude Code",
   "type": "module",
   "private": true,
   "scripts": {
